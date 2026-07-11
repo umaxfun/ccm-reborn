@@ -24,6 +24,12 @@ npm run tauri dev
 
 The `tauri dev` script selects a free localhost port each time, so it does not collide with other Vite/Tauri projects.
 
+The **Install** buttons are currently read-only dry-runs: they validate the archive, enumerate every campaign/dependency file with source and destination, discover the selected StarCraft II account profile, and show the exact bank/save moves plus the target `CampaignProgress.xml` attributes that a future switch would snapshot and reset. No StarCraft II files are changed. Applying a plan will be added only after the progress-isolation and recovery tests are complete.
+
+The broader profile, progress ordering, version identity, migration, and
+Yuri → Abathur → Yuri round-trip design is documented in
+[`design/progress-profiles-plan.md`](design/progress-profiles-plan.md).
+
 Choose the directory that contains SC2's `Maps` directory (on Windows, normally the directory containing `SC2_x64.exe`) in **Configure sources**. Use a disposable SC2 install for development.
 
 Each catalog entry requires metadata for display and a verified package:

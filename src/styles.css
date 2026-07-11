@@ -38,3 +38,152 @@ dialog { width: min(610px, 90vw); border: 1px solid #3d5d77; border-radius: 12px
 .library-workspace { margin-top: 0; }
 @media (max-width: 1100px) { .campaign-dashboard { grid-template-columns: 1fr; } }
 .current-slot-actions { display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap; }.current-slot-actions .repair { padding-inline: 1rem; }
+.plan-card { width: min(760px, 92vw); max-height: 88vh; overflow: auto; }.plan-card h2 { margin: 0; }.plan-subtitle { margin: -8px 0 0; color: #8ea7b8; font-size: 11px; }.plan-subtitle code, .plan-section code { color: #b8efff; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; }.plan-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }.plan-stats > div { display: grid; gap: 4px; padding: 10px; border: 1px solid #29445b; border-radius: 6px; background: #0a151f; }.plan-stats small, .plan-section > small { color: #7591a8; font-size: 9px; letter-spacing: .1em; }.plan-stats strong { color: #dff5ff; font-size: 12px; }.plan-section { display: grid; gap: 7px; padding-top: 11px; border-top: 1px solid #24394b; }.plan-section ul { max-height: 125px; overflow: auto; margin: 0; padding-left: 18px; }.plan-section li { color: #9ab2c3; font-size: 10px; line-height: 1.55; }.plan-section p { margin: 0; color: #8099ab; font-size: 11px; }.plan-warnings { display: grid; gap: 5px; padding: 10px; border: 1px solid #6a5834; border-radius: 6px; background: #2a2112; }.plan-warnings p { margin: 0; color: #e3ca8d; font-size: 11px; line-height: 1.4; }
+
+/* The plan is a real modal, not a wide section behind the dialog viewport. */
+#plan-dialog {
+  box-sizing: border-box;
+  width: min(760px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  height: min(900px, calc(100vh - 32px));
+  max-height: calc(100vh - 32px);
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+}
+#plan-dialog::backdrop { background: #02050ab8; backdrop-filter: blur(3px); }
+#plan-dialog .plan-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: calc(100vh - 32px);
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+}
+#plan-dialog .plan-scroll {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 18px;
+  min-height: 0;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 28px 28px 18px;
+}
+#plan-dialog .plan-section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+#plan-dialog .plan-section-heading span {
+  color: #728da3;
+  font-size: 9px;
+  text-align: right;
+}
+#plan-dialog .plan-change-list,
+#plan-dialog .plan-bank-list,
+#plan-dialog .plan-key-list {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+  border: 1px solid #29445b;
+  border-radius: 6px;
+  overflow: hidden;
+}
+#plan-dialog .plan-group-list { display: grid; gap: 7px; min-width: 0; }
+#plan-dialog .plan-group {
+  min-width: 0;
+  border: 1px solid #29445b;
+  border-radius: 6px;
+  background: #0a151f;
+  overflow: hidden;
+}
+#plan-dialog .plan-group > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  color: #dff5ff;
+  cursor: pointer;
+  list-style: none;
+  font-size: 10px;
+}
+#plan-dialog .plan-group > summary::-webkit-details-marker { display: none; }
+#plan-dialog .plan-group > summary::before { content: "›"; color: #72dfff; font-size: 15px; line-height: 10px; }
+#plan-dialog .plan-group[open] > summary::before { content: "⌄"; }
+#plan-dialog .plan-group > summary span { flex: 1 1 auto; overflow-wrap: anywhere; }
+#plan-dialog .plan-group > summary strong { color: #8eb4c9; font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; }
+#plan-dialog .plan-group > .plan-change-list { border: 0; border-top: 1px solid #29445b; border-radius: 0; }
+#plan-dialog .plan-change-row {
+  display: grid;
+  grid-template-columns: minmax(110px, .7fr) minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(90px, .7fr);
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  border-bottom: 1px solid #1f3548;
+  background: #0a151f;
+}
+#plan-dialog .plan-change-row:last-child,
+#plan-dialog .plan-bank-row:last-child,
+#plan-dialog .plan-key-row:last-child { border-bottom: 0; }
+#plan-dialog .plan-change-row > div,
+#plan-dialog .plan-bank-row > div { display: grid; align-content: start; gap: 3px; min-width: 0; }
+#plan-dialog .plan-change-row small,
+#plan-dialog .plan-bank-row small,
+#plan-dialog .plan-key-row small { color: #7591a8; font-size: 8px; letter-spacing: .1em; }
+#plan-dialog .plan-change-row code,
+#plan-dialog .plan-bank-row code { color: #b8efff; font: 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
+#plan-dialog .plan-change-operation strong { color: #dff5ff; font-size: 10px; line-height: 1.35; }
+#plan-dialog .plan-change-meta { color: #9ab2c3; font-size: 9px; }
+#plan-dialog .plan-change-meta span { line-height: 1.35; }
+#plan-dialog .plan-change-meta em { color: #718ca2; font-size: 8px; font-style: normal; line-height: 1.35; }
+#plan-dialog .profile-change-row { background: #0b1722; }
+#plan-dialog .plan-bank-row {
+  display: grid;
+  grid-template-columns: minmax(100px, .8fr) minmax(0, 1.3fr) minmax(0, 1.3fr);
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  border-bottom: 1px solid #1f3548;
+  background: #0a151f;
+}
+#plan-dialog .plan-bank-row > strong,
+#plan-dialog .plan-bank-row > p { grid-column: 1 / -1; margin: 0; }
+#plan-dialog .plan-bank-row > strong { color: #dff5ff; font-size: 10px; }
+#plan-dialog .plan-bank-row > p { color: #8199ac; font-size: 9px; line-height: 1.35; }
+#plan-dialog .plan-key-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(90px, .5fr) minmax(0, 1.5fr);
+  gap: 10px;
+  align-items: baseline;
+  min-width: 0;
+  padding: 8px 10px;
+  border-bottom: 1px solid #1f3548;
+  background: #0a151f;
+}
+#plan-dialog .plan-key-row code { color: #b8efff; font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+#plan-dialog .plan-key-row span { color: #e3ca8d; font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; }
+#plan-dialog .plan-key-row small { line-height: 1.35; }
+#plan-dialog .plan-section,
+#plan-dialog .plan-stats,
+#plan-dialog .plan-warnings { min-width: 0; }
+#plan-dialog code,
+#plan-dialog li { overflow-wrap: anywhere; word-break: break-word; }
+#plan-dialog .plan-profile-files { max-height: 190px; }
+#plan-dialog .plan-profile-files li { display: grid; gap: 2px; }
+#plan-dialog .plan-profile-files li span { color: #728da3; font-size: 9px; }
+#plan-dialog .dialog-actions {
+  flex: 0 0 auto;
+  position: static;
+  margin: 0;
+  padding: 12px 28px 28px;
+  border-top: 1px solid #24394b;
+  background: #0d141e;
+}

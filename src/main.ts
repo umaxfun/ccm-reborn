@@ -40,6 +40,66 @@ type Inspection = {
 
 type GameDirectoryCandidate = { path: string; label: string };
 type RestoreResult = { restoredFiles: number; conflicts: string[] };
+type ProgressFilePlan = {
+  relativePath: string;
+  source: string;
+  destination: string;
+  kind: string;
+  action: string;
+  size: number;
+  sha256: string;
+  detail: string | null;
+};
+type FileChangePlan = {
+  source: string;
+  destination: string;
+  operation: string;
+  kind: string;
+  size: number;
+  sha256: string | null;
+  detail: string | null;
+};
+type ProgressKeyChange = {
+  key: string;
+  currentValue: string;
+  plannedValue: string;
+  action: string;
+};
+type BankPlan = {
+  relativePath: string;
+  source: string;
+  destination: string;
+  sections: number;
+  keys: number;
+  keysChangedInPlace: number;
+  note: string;
+};
+type DryRunPlan = {
+  operationId: string;
+  campaignId: string;
+  title: string;
+  gameDirectory: string;
+  targetPath: string;
+  archiveSize: number;
+  archiveSha256: string;
+  packageFiles: number;
+  packageBytes: number;
+  campaignFilesToClear: number;
+  campaignBytesToClear: number;
+  dependencyRoots: string[];
+  dependencyFilesToReplace: number;
+  filesToBackup: number;
+  profilePath: string | null;
+  profileStorePath: string | null;
+  profileFilesToSnapshot: number;
+  profileBytesToSnapshot: number;
+  progressUpdates: number;
+  progressFiles: ProgressFilePlan[];
+  progressKeys: ProgressKeyChange[];
+  bankPlans: BankPlan[];
+  fileChanges: FileChangePlan[];
+  warnings: string[];
+};
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("Application root is missing.");
@@ -63,6 +123,7 @@ let message = "Preparing campaign control…";
 let messageKind: "neutral" | "success" | "error" = "neutral";
 let busy = false;
 let launchMessageTimer: number | undefined;
+let pendingPlan: DryRunPlan | null = null;
 
 const escapeHtml = (value: string) => value.replace(/[&<>'"]/g, (character) =>
   ({ "&": "&amp;", "<": "&gt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]!,
@@ -143,8 +204,103 @@ function render() {
         </div>
       </form>
     </dialog>
+    ${pendingPlan ? renderPlanDialog(pendingPlan) : ""}
   `;
   bindEvents();
+  const planDialog = document.querySelector<HTMLDialogElement>("#plan-dialog");
+  if (planDialog && !planDialog.open) planDialog.showModal();
+}
+
+function groupByAction<T>(items: T[], getAction: (item: T) => string) {
+  const groups = new Map<string, T[]>();
+  for (const item of items) {
+    const action = getAction(item);
+    const group = groups.get(action) ?? [];
+    group.push(item);
+    groups.set(action, group);
+  }
+  return [...groups.entries()];
+}
+
+function renderPlanDialog(plan: DryRunPlan) {
+  const renderFileChange = (change: FileChangePlan) => `
+    <article class="plan-change-row">
+      <div class="plan-change-operation"><small>${escapeHtml(change.kind)}</small><strong>${escapeHtml(change.operation)}</strong></div>
+      <div><small>FROM</small><code>${escapeHtml(change.source)}</code></div>
+      <div><small>TO</small><code>${escapeHtml(change.destination)}</code></div>
+      <div class="plan-change-meta"><small>SIZE / HASH</small><span>${formatBytes(change.size)}${change.sha256 ? ` · ${escapeHtml(change.sha256.slice(0, 12))}…` : ""}</span></div>
+    </article>`;
+  const renderProfileChange = (file: ProgressFilePlan) => `
+    <article class="plan-change-row profile-change-row">
+      <div class="plan-change-operation"><small>${escapeHtml(file.kind)}</small><strong>${escapeHtml(file.action)}</strong></div>
+      <div><small>FROM</small><code>${escapeHtml(file.source)}</code></div>
+      <div><small>TO</small><code>${escapeHtml(file.destination)}</code></div>
+      <div class="plan-change-meta"><small>SIZE / HASH</small><span>${formatBytes(file.size)} · ${escapeHtml(file.sha256.slice(0, 12))}…</span>${file.detail ? `<em>${escapeHtml(file.detail)}</em>` : ""}</div>
+    </article>`;
+  const fileGroups = groupByAction(plan.fileChanges, (change) => change.operation).map(([action, changes]) => `
+    <details class="plan-group">
+      <summary><span>${escapeHtml(action)}</span><strong>${changes.length}</strong></summary>
+      <div class="plan-change-list">${changes.map(renderFileChange).join("")}</div>
+    </details>`).join("");
+  const profileGroups = groupByAction(plan.progressFiles, (file) => file.action).map(([action, files]) => `
+    <details class="plan-group">
+      <summary><span>${escapeHtml(action)}</span><strong>${files.length}</strong></summary>
+      <div class="plan-change-list">${files.map(renderProfileChange).join("")}</div>
+    </details>`).join("");
+  const bankPlans = plan.bankPlans.map((bank) => `
+    <article class="plan-bank-row">
+      <div><small>BANK</small><code>${escapeHtml(bank.relativePath)}</code></div>
+      <div><small>FROM</small><code>${escapeHtml(bank.source)}</code></div>
+      <div><small>TO</small><code>${escapeHtml(bank.destination)}</code></div>
+      <strong>${bank.sections} sections · ${bank.keys} keys · ${bank.keysChangedInPlace} keys changed in place</strong>
+      <p>${escapeHtml(bank.note)}</p>
+    </article>`).join("");
+  const progressKeys = plan.progressKeys.map((key) => `
+    <article class="plan-key-row">
+      <code>${escapeHtml(key.key)}</code>
+      <span>${escapeHtml(key.currentValue)} → ${escapeHtml(key.plannedValue)}</span>
+      <small>${escapeHtml(key.action)}</small>
+    </article>`).join("");
+  return `
+    <dialog id="plan-dialog">
+      <section class="dialog-card plan-card">
+        <button class="close" data-action="close-plan" aria-label="Close">×</button>
+        <div class="plan-scroll">
+          <p class="eyebrow">DRY-RUN · NO FILES CHANGED</p>
+          <h2>Review ${escapeHtml(plan.title)}</h2>
+          <p class="plan-subtitle">Operation ${escapeHtml(plan.operationId)} · target <code>${escapeHtml(plan.targetPath)}</code> · game <code>${escapeHtml(plan.gameDirectory)}</code></p>
+          <div class="plan-stats">
+            <div><small>PACKAGE</small><strong>${plan.packageFiles} files · ${formatBytes(plan.packageBytes)}</strong></div>
+            <div><small>WOULD CLEAR</small><strong>${plan.campaignFilesToClear} files · ${formatBytes(plan.campaignBytesToClear)}</strong></div>
+            <div><small>WOULD BACK UP</small><strong>${plan.filesToBackup} files</strong></div>
+            <div><small>ARCHIVE</small><strong>${formatBytes(plan.archiveSize)} · ${escapeHtml(plan.archiveSha256.slice(0, 12))}…</strong></div>
+            <div><small>SAVE PROFILE</small><strong>${plan.profileFilesToSnapshot} files · ${formatBytes(plan.profileBytesToSnapshot)}</strong></div>
+            <div><small>PROGRESS UPDATE</small><strong>${plan.progressUpdates ? `${plan.progressUpdates} node · ${plan.progressKeys.length} keys` : "not detected"}</strong></div>
+          </div>
+          <section class="plan-section plan-operation-section">
+            <div class="plan-section-heading"><small>ALL FILE CHANGES · ${plan.fileChanges.length}</small><span>every row is included</span></div>
+            <p>Existing files are snapshotted before clear/replace. Package files are copied to the exact destination shown below.</p>
+            ${plan.dependencyRoots.length ? `<p>Dependency roots: ${plan.dependencyRoots.map((path) => `<code>${escapeHtml(path)}</code>`).join(" · ")}</p>` : ""}
+            <div class="plan-group-list">${fileGroups || "<p>No game-file changes.</p>"}</div>
+          </section>
+          <section class="plan-section plan-operation-section">
+            <div class="plan-section-heading"><small>PROFILE FILE MOVES · ${plan.progressFiles.length}</small><span>${plan.profileStorePath ? `store: ${escapeHtml(plan.profileStorePath)}` : "no profile store"}</span></div>
+            ${plan.profilePath ? `<p>Current profile: <code>${escapeHtml(plan.profilePath)}</code></p>` : "<p>No profile files were discovered for this branch.</p>"}
+            <div class="plan-group-list">${profileGroups || "<p>No save, bank, or progress files will be moved.</p>"}</div>
+          </section>
+          <section class="plan-section plan-operation-section">
+            <div class="plan-section-heading"><small>CAMPAIGN PROGRESS KEYS · ${plan.progressKeys.length}</small><span>exact XML attributes</span></div>
+            <div class="plan-key-list">${progressKeys || "<p>No target CampaignProgress.xml keys will be changed.</p>"}</div>
+          </section>
+          <section class="plan-section plan-operation-section">
+            <div class="plan-section-heading"><small>BANK INVENTORY · ${plan.bankPlans.length}</small><span>whole-file swap, no in-place key edits</span></div>
+            <div class="plan-bank-list">${bankPlans || "<p>No target campaign bank was found.</p>"}</div>
+          </section>
+          <section class="plan-warnings">${plan.warnings.map((warning) => `<p>ⓘ ${escapeHtml(warning)}</p>`).join("")}</section>
+        </div>
+        <div class="dialog-actions"><button class="primary" data-action="close-plan">Close dry-run</button></div>
+      </section>
+    </dialog>`;
 }
 
 function renderLibrary() {
@@ -245,6 +401,12 @@ function bindEvents() {
   document.querySelectorAll<HTMLButtonElement>("[data-action='install']").forEach((button) => {
     button.addEventListener("click", () => void installCampaign(button.dataset.campaign ?? ""));
   });
+  document.querySelectorAll<HTMLButtonElement>("[data-action='close-plan']").forEach((button) => {
+    button.addEventListener("click", () => {
+      pendingPlan = null;
+      render();
+    });
+  });
   document.querySelectorAll<HTMLButtonElement>("[data-action='play']").forEach((button) => button.addEventListener("click", () => void playCurrentCampaign()));
   document.querySelector<HTMLButtonElement>("[data-action='restore']")?.addEventListener("click", () => void restoreOriginals());
 }
@@ -338,16 +500,17 @@ async function installCampaign(campaignId: string) {
   const campaign = catalog?.campaigns.find((item) => item.id === campaignId);
   if (!campaign || !gameDir) return;
   busy = true;
-  message = `Installing ${campaign.title}…`;
+  pendingPlan = null;
+  message = `Planning a safe dry-run for ${campaign.title}…`;
   messageKind = "neutral";
   render();
   try {
-    const result = await invoke<{ filesInstalled: number }>("install_campaign", {
+    const result = await invoke<DryRunPlan>("plan_campaign_install", {
       request: { campaignId: campaign.id, title: campaign.title, archiveSource: campaign.package.source, sha256: campaign.package.sha256, gameDir },
     });
-    message = `${campaign.title} installed — ${result.filesInstalled} managed files.`;
+    pendingPlan = result;
+    message = `Dry-run complete for ${campaign.title}. No files were changed.`;
     messageKind = "success";
-    await inspectDirectory();
   } catch (error) {
     message = String(error);
     messageKind = "error";
