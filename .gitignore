@@ -4,3 +4,4 @@ work/
 src-tauri/target/
 *.DS_Store
 dev-catalog/packages/*
+.wrangler/

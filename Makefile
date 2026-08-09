@@ -8,7 +8,7 @@ export PATH := $(LLVM_PREFIX)/bin:$(PATH)
 endif
 
 .DEFAULT_GOAL := help
-.PHONY: help test mac mac-universal setup-win win all
+.PHONY: help check source-size test cli mac mac-universal setup-win win all
 
 help:
 	@printf '%s\n' \
@@ -17,11 +17,21 @@ help:
 	  'make setup-win     Install the Windows cross-build prerequisites on macOS.' \
 	  'make win           Build a 64-bit Windows NSIS setup .exe from macOS.' \
 	  'make all           Build macOS and Windows artifacts.' \
-	  'make test          Run frontend and Rust tests.'
+	  'make test          Run frontend and Rust tests.' \
+	  'make check         Run source-size checks, frontend and Rust tests.' \
+	  'make cli           Build and show the core CLI help.'
+
+source-size:
+	npm run check:source-size
+
+check: source-size test
 
 test:
 	npm run build
 	cargo test --manifest-path src-tauri/Cargo.toml
+
+cli:
+	cargo run --manifest-path src-tauri/Cargo.toml --bin ccm -- help
 
 mac:
 	npm run tauri build -- --bundles app

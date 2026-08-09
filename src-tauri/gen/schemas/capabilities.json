@@ -1,1 +1,1 @@
-{}
+{"main-window":{"identifier":"main-window","description":"Least-privilege IPC for CCM Reborn's only application window.","local":true,"windows":["main"],"permissions":["core:default","dialog:allow-open"]}}

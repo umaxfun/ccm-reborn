@@ -1,0 +1,895 @@
+{
+  "format": 1,
+  "name": "CCM Reborn · Community campaigns",
+  "updatedAt": "2026-07-11T13:37:28.631Z",
+  "campaigns": [
+    {
+      "id": "coop-ai",
+      "title": "Coop AI",
+      "author": "MajorKaza",
+      "version": "4.7-hf2",
+      "description": "Wings of Liberty as cooperative play with multiple AI as an ally.",
+      "tags": [
+        "Wings of Liberty",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Wings of Liberty",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/wol/coop-ai-4.7-hf2.zip",
+        "sha256": "6daa3e9117fcbd1c993fdaccc463fae931deadf894010f978e574db6682a621b",
+        "size": 66263558
+      }
+    },
+    {
+      "id": "junker-edition",
+      "title": "Junker Edition",
+      "author": "Rhyme",
+      "version": "2.02",
+      "description": "WoL with a brand new arsenal of units.",
+      "tags": [
+        "Wings of Liberty",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Wings of Liberty",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/wol/junker-2.02.zip",
+        "sha256": "bd37499400a8de75cc3664c2e1770e57c339cdc550efae1f62845aedcbde0b04",
+        "size": 49900317
+      }
+    },
+    {
+      "id": "lings-of-wiberty",
+      "title": "Lings of Wiberty",
+      "author": "-G",
+      "version": "1.25",
+      "description": "Help rim jaynor and his twin brother jim raynor save the koprulu sector, ROTH",
+      "tags": [
+        "Wings of Liberty",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Wings of Liberty",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/wol/lings-of-wiberty-1.25.zip",
+        "sha256": "3de538209734d51f0b3ca5155598c1179c66188c886d53b2bb2d0bb3f50ce3f7",
+        "size": 184274216
+      }
+    },
+    {
+      "id": "mindhawk-s-gauntlet",
+      "title": "MindHawk's Gauntlet",
+      "author": "MindHawk",
+      "version": "1.200",
+      "description": "A series of Wings of Liberty challenges",
+      "tags": [
+        "Wings of Liberty",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Wings of Liberty",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/wol/mindhawk-gauntlet-1.200.zip",
+        "sha256": "3342716baf77be5810b450750559daff23e98f6f8b15ba92bd3487a1c7a25cbb",
+        "size": 51693098
+      }
+    },
+    {
+      "id": "moebius-pack",
+      "title": "Moebius Pack",
+      "author": "Nadrel",
+      "version": "1.35",
+      "description": "Wings of Liberty if Moebius had equipped Raynor's Rebels and many other changes. Based on the Nightmare Difficulty mod by Rhyme",
+      "tags": [
+        "Wings of Liberty",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Wings of Liberty",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/wol/moebius-pack-1.35.zip",
+        "sha256": "dbb6e2e120c2ccbdd872035a847117301dd15240b56127016291579447cbc9b4",
+        "size": 77537681
+      }
+    },
+    {
+      "id": "nightmare-difficulty-wings-of-liberty",
+      "title": "Nightmare Difficulty",
+      "author": "Rhyme",
+      "version": "2.025",
+      "description": "Wings of Liberty but with increased difficulty (and some adjustments to some tech)",
+      "tags": [
+        "Wings of Liberty",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Wings of Liberty",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/wol/nightmare-2.025.zip",
+        "sha256": "7bfd3c9a70c8ab75a354366cfae5404cec6b9be765b53a407919bc957e871e37",
+        "size": 70327260
+      }
+    },
+    {
+      "id": "raynor-has-gone-rogue-like",
+      "title": "Raynor has Gone Rogue(like)!",
+      "author": "Redfrog",
+      "version": "1.09.5",
+      "description": "Play with Roguelike elements! Several times each mission you get offered permament talents and curses that persist trough missions.",
+      "tags": [
+        "Wings of Liberty",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Wings of Liberty",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/wol/raynor-rogue-1.09.5.zip",
+        "sha256": "5177d46682f268cf250102cb7be8cea45a030ef69f79700963e9202219f504a0",
+        "size": 95714377
+      }
+    },
+    {
+      "id": "real-scale-wol",
+      "title": "Real Scale WoL",
+      "author": "Orcawarrior2, Eclairtle and Rhyme",
+      "version": "2.8",
+      "description": "Wings of Liberty but with all units re-scaled to their canon size, according to the Starcraft Field Manual.",
+      "tags": [
+        "Wings of Liberty",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Wings of Liberty",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/wol/real-scale-2.8.zip",
+        "sha256": "8b86bf02a7d89d863f67f38d35a8cc7b428df675895aa850c292da311ccc26bd",
+        "size": 65224488
+      }
+    },
+    {
+      "id": "wings-of-liberty-human-edition",
+      "title": "Wings of Liberty: Human Edition",
+      "author": "NikoN",
+      "version": "1.1.3",
+      "description": "Wings of Liberty, but you play as Humans from Warcraft 3",
+      "tags": [
+        "Wings of Liberty",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Wings of Liberty",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/wol/human-edition-1.1.3.zip",
+        "sha256": "541409486ba7f6858ab39e6985c22aa18fe68eeab59e61a2302032512e33b480",
+        "size": 72434729
+      }
+    },
+    {
+      "id": "wings-of-mengsk",
+      "title": "Wings of Mengsk",
+      "author": "子神(Zishen)",
+      "version": "1.07",
+      "description": "Wings of Liberty with Mengsk Coop Units and more(Nightmare base)",
+      "tags": [
+        "Wings of Liberty",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Wings of Liberty",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/wol/wings-of-mengsk-1.07.zip",
+        "sha256": "069622116de302fc8d3407c4da1a017552f239b2676b29a8569707799def0a55",
+        "size": 242577022
+      }
+    },
+    {
+      "id": "wol-1hp-paintball",
+      "title": "WOL - 1hp Paintball",
+      "author": "MysticGolem",
+      "version": "1.1.8",
+      "description": "Wings of Liberty where the God of the Xel'Naga, the God of the Zerg and the God of the Protoss have decreed that everything has 1 hp.",
+      "tags": [
+        "Wings of Liberty",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Wings of Liberty",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/wol/paintball-1.1.8.zip",
+        "sha256": "0fe0acecbcc2d9382b4e652bb4d661205b6c72d816b2e00de93430f9aec0acb2",
+        "size": 53697629
+      }
+    },
+    {
+      "id": "wol-tychus-edition-nightmare",
+      "title": "WOL: Tychus Edition (Nightmare)",
+      "author": "Lunchbox0924",
+      "version": "1.691",
+      "description": "Wings of Liberty but with your favorite Outlaw. Show Raynor how you really get a revolution going!",
+      "tags": [
+        "Wings of Liberty",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Wings of Liberty",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/wol/tychus-edition-1.691.zip",
+        "sha256": "18751dc104c399f40415d4c27e7cc40687f3723ecb2960ab401059f77aae0dc4",
+        "size": 138341558
+      }
+    },
+    {
+      "id": "f-yuri-of-the-swarm",
+      "title": "(F)Yuri of the Swarm",
+      "author": "Redfrog",
+      "version": "1.09",
+      "description": "Heart of the Swarm played trough the Yuri faction from Red Alert 2: Yuri's Revenge.",
+      "tags": [
+        "Heart of the Swarm",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Heart of the Swarm",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/hots/yuri-1.09.zip",
+        "sha256": "1c93bf0d3a82001d35a26dd166e7af0d21f23985a67ae49588133a6a7ef6dec6",
+        "size": 102706390
+      }
+    },
+    {
+      "id": "abathur-s-whimsy",
+      "title": "Abathur's Whimsy",
+      "author": "Hiccup251",
+      "version": "3.3",
+      "description": "HotS, but Abathur let loose",
+      "tags": [
+        "Heart of the Swarm",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Heart of the Swarm",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/hots/abathurs-whimsy-3.3.zip",
+        "sha256": "352c28ac782d0a37c73b2e5d315ac16a90a67a723a083815ebbfd3d8ab35b3b7",
+        "size": 40492205
+      }
+    },
+    {
+      "id": "heart-of-the-swarm-randomizer",
+      "title": "Heart of the Swarm Randomizer",
+      "author": "Kit",
+      "version": "1.0.2",
+      "description": "Heart of the Swarm Randomizer",
+      "tags": [
+        "Heart of the Swarm",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Heart of the Swarm",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/hots/randomizer-1.0.2.zip",
+        "sha256": "82d83a3cced3e7b16d97b2f070c40975d37f7ec9655364b8c7d607bbc9039e18",
+        "size": 31947366
+      }
+    },
+    {
+      "id": "hots-1hp-paintball",
+      "title": "HOTS - 1hp Paintball",
+      "author": "MysticGolem",
+      "version": "1.1.3",
+      "description": "Heart of the Swarm where the God of the Xel'Naga, the God of the Zerg and the God of the Protoss have decreed that everything has 1 hp.",
+      "tags": [
+        "Heart of the Swarm",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Heart of the Swarm",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/hots/paintball-1.1.3.zip",
+        "sha256": "b5eb0383bf3bb05c1964ac99328d5b90834b3336b9fa528fc08ec0650c16e1e5",
+        "size": 40878261
+      }
+    },
+    {
+      "id": "hots-ai-allies",
+      "title": "HOTS Ai Allies",
+      "author": "Ylvae",
+      "version": "4",
+      "description": "Heart of the Swarm as cooperative play with multiple AI as an ally.",
+      "tags": [
+        "Heart of the Swarm",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Heart of the Swarm",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/hots/ai-allies-4.zip",
+        "sha256": "cfd53bb0f30a56b1eece2a1f9eab9c2b178304bd8d489cd1e67cccd47012ced9",
+        "size": 44651376
+      }
+    },
+    {
+      "id": "hots-overmind-mod",
+      "title": "HotS Overmind Mod",
+      "author": "DragonStorm247",
+      "version": "1.02",
+      "description": "A powerful new Zerg faction loosely based on SC1. Using Rhyme's Nightmare as a base.",
+      "tags": [
+        "Heart of the Swarm",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Heart of the Swarm",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/hots/overmind-1.02.zip",
+        "sha256": "0677c2828d600b68df2a444e965f08a7716f72e32aa4ca7c6fba32a54f2fa48b",
+        "size": 42781531
+      }
+    },
+    {
+      "id": "kerrigan-has-gone-rogue-like",
+      "title": "Kerrigan has Gone Rogue(like)!",
+      "author": "Redfrog",
+      "version": "1.06",
+      "description": "Play with Roguelike elements! Several times each mission you get offered permament talents and curses that persist trough missions.",
+      "tags": [
+        "Heart of the Swarm",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Heart of the Swarm",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/hots/kerrigan-rogue-1.06.zip",
+        "sha256": "fd078e39c070a2e8759cdbded9eb7372cc0a2aa2e398be724de92c41acfd062b",
+        "size": 41240242
+      }
+    },
+    {
+      "id": "nightmare-difficulty",
+      "title": "Nightmare Difficulty",
+      "author": "Rhyme",
+      "version": "2.02",
+      "description": "Heart of the Swarm but with increased difficulty (and various tech/Kerrigan adjustments)",
+      "tags": [
+        "Heart of the Swarm",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Heart of the Swarm",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/hots/nightmare-2.02.zip",
+        "sha256": "91c50d80c67be65d79861bbb93814b97526b27404a21f5e8ff0f382e0741a10c",
+        "size": 40059976
+      }
+    },
+    {
+      "id": "real-scale-heart-of-the-swarm",
+      "title": "Real-Scale Heart of the Swarm",
+      "author": "Orcawarrior2 & Eclairtle",
+      "version": "2.8",
+      "description": "Scaled to be lore accurate (with capital ships at 1/3 size)",
+      "tags": [
+        "Heart of the Swarm",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Heart of the Swarm",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/hots/real-scale-2.8.zip",
+        "sha256": "36f39f56ac78554e02a33f389e35db950cdf71c8cf759cc338a05f6374d25b58",
+        "size": 52247967
+      }
+    },
+    {
+      "id": "the-swarm-reborn",
+      "title": "The Swarm Reborn",
+      "author": "Cryswar",
+      "version": "0.71",
+      "description": "Expands evolutions, mutations, allies, and commanders to offer a vanilla+ experience.",
+      "tags": [
+        "Heart of the Swarm",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Heart of the Swarm",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/hots/swarm-reborn-0.71.zip",
+        "sha256": "b1aa927456a9dfe30bda30f59b62ab166ec3dec9b75b149fc414f0e2dff6c7cf",
+        "size": 250965790
+      }
+    },
+    {
+      "id": "violet-s-hots-rework-mod",
+      "title": "Violet's HoTS Rework Mod",
+      "author": "Violet Rose",
+      "version": "1.12",
+      "description": "NEW: Dummy Thicc Creep Tumors",
+      "tags": [
+        "Heart of the Swarm",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Heart of the Swarm",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/hots/violets-rework-1.12.zip",
+        "sha256": "8aa7fea428b74697fb29ea180e3e14324ed0978d0622e5491c75527e45cb6591",
+        "size": 37788079
+      }
+    },
+    {
+      "id": "heart-of-eyeser-ccm-available-poor-google-translate",
+      "title": "喵头嘤の奇妙战役-虫群之心",
+      "author": "喵头嘤Ey",
+      "version": "1.01",
+      "description": "喵头嘤の奇妙战役-虫群之心",
+      "tags": [
+        "Heart of the Swarm",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Heart of the Swarm",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/hots/heart-of-eyeser-1.01.zip",
+        "sha256": "ed8f82141d34a13d5de4058764ff92ab06d6b9c2f7ba7872eec066d18432288f",
+        "size": 283458166
+      }
+    },
+    {
+      "id": "aeon-of-purification",
+      "title": "Aeon of Purification",
+      "author": "Amith",
+      "version": "1.43",
+      "description": "LOTV with Purifiers + Mission Changes",
+      "tags": [
+        "Legacy of the Void",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Legacy of the Void",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/lotv/aeon-of-purification-1.43.zip",
+        "sha256": "4a80896a51592ae5da2ae3ff4187a82dd609b1f70ec26beb3d5d093252d5401a",
+        "size": 104498936
+      }
+    },
+    {
+      "id": "fight-with-ally",
+      "title": "Fight with ally!",
+      "author": "Remiu",
+      "version": "1.9.9",
+      "description": "You don't use death ball here, your ally does!",
+      "tags": [
+        "Legacy of the Void",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Legacy of the Void",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/lotv/fight-with-ally-1.9.9.zip",
+        "sha256": "68c5e900f423f4d65b564d9e8296f962b68d3ac3a8761836bac04783a6be54ff",
+        "size": 42755587
+      }
+    },
+    {
+      "id": "legacy-of-the-void-gauntlet",
+      "title": "Legacy of the Void Gauntlet",
+      "author": "MindHawk",
+      "version": "1.0",
+      "description": "Suffer, as I have.",
+      "tags": [
+        "Legacy of the Void",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Legacy of the Void",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/lotv/gauntlet-1.0.zip",
+        "sha256": "5219bda99e13ab8f4922a3920a3796babcea71406aacbc4a4479d8f3a6cb9b48",
+        "size": 46391267
+      }
+    },
+    {
+      "id": "legacy-of-the-xel-naga",
+      "title": "Legacy of the Xel'Naga",
+      "author": "Kit",
+      "version": "1.11.1",
+      "description": "Legacy of the Void as Zeratul Commander",
+      "tags": [
+        "Legacy of the Void",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Legacy of the Void",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/lotv/xel-naga-1.11.1.zip",
+        "sha256": "d076701c47af95e75af1162666ad3a0d41fa2ede850f868dc0c4aefade5e1df4",
+        "size": 77994804
+      }
+    },
+    {
+      "id": "lotv-1hp-paintball",
+      "title": "LotV - 1hp Paintball",
+      "author": "MysticGolem",
+      "version": "1.1.6",
+      "description": "Legacy of the Void where the God of the Xel'Naga, the God of the Zerg and the God of the Protoss have decreed that everything has 1 hp.",
+      "tags": [
+        "Legacy of the Void",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Legacy of the Void",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/lotv/paintball-1.1.6.zip",
+        "sha256": "b88e686dcbb1c134c6e6c1e67782965950757d5a7e233046fa981842d61d0aa6",
+        "size": 46813167
+      }
+    },
+    {
+      "id": "lotv-chaos",
+      "title": "LotV ChAoS",
+      "author": "MindHawk",
+      "version": "1.0",
+      "description": "MindHawk's mind, unchained.",
+      "tags": [
+        "Legacy of the Void",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Legacy of the Void",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/lotv/chaos-1.0.zip",
+        "sha256": "0316c1cb77e0764e6487bd2e3cb5b7ee7108cc7114bcd8cad863da7fc6db312d",
+        "size": 113777399
+      }
+    },
+    {
+      "id": "nightmare-difficulty-legacy-of-the-void",
+      "title": "Nightmare Difficulty",
+      "author": "Rhyme",
+      "version": "1.14",
+      "description": "Legacy of the Void but with increased difficulty (and various tech adjustments)",
+      "tags": [
+        "Legacy of the Void",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Legacy of the Void",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/lotv/nightmare-1.14.zip",
+        "sha256": "4f89f91112e95cf74b48bfe0d8b9cec2f95e039ebd189d049addcb7f27203959",
+        "size": 32619558
+      }
+    },
+    {
+      "id": "real-scale-lotv",
+      "title": "Real-Scale LotV",
+      "author": "Orcawarrior2",
+      "version": "2.8",
+      "description": "Something something lore accurate sizes and stats",
+      "tags": [
+        "Legacy of the Void",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Legacy of the Void",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/lotv/real-scale-2.8.zip",
+        "sha256": "623b8ea8ce70add978eb71d45ace1ed796793682abf0378956dc63f0bea0f676",
+        "size": 60436469
+      }
+    },
+    {
+      "id": "legacy-of-purifier-1-04-ccm-translated",
+      "title": "净化者之遗",
+      "author": "HTXL",
+      "version": "1.04",
+      "description": "使用净化者进行虚空之遗战役",
+      "tags": [
+        "Legacy of the Void",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Legacy of the Void",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/lotv/legacy-of-purifier-1.04.zip",
+        "sha256": "779f8f1feb1ec9b5f43e7c6dcf29abe6c5485b0568bdbd9d80c48d03a4c455da",
+        "size": 41485581
+      }
+    },
+    {
+      "id": "mod-ccm-translated",
+      "title": "喵头嘤の奇妙战役",
+      "author": "喵头嘤",
+      "version": "1.00",
+      "description": "喵头嘤の奇妙战役",
+      "tags": [
+        "Legacy of the Void",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Legacy of the Void",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/lotv/ccm-translated-1.00.zip",
+        "sha256": "682e9fecf5206d709885d47b07f893cc6368ba3184a0a404acb25eed1f283f8a",
+        "size": 27101603
+      }
+    },
+    {
+      "id": "avon-overt-cops",
+      "title": "Avon: Overt Cops",
+      "author": "ShadowsSun",
+      "version": "1.6.2",
+      "description": "A goofy mod that replaces all the units in NCO with some... unconventional variants. Featuring HERCs.",
+      "tags": [
+        "Nova Covert Ops",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Nova Covert Ops",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/nco/avon-overt-cops-1.6.2.zip",
+        "sha256": "d00c7d55c988fcad1fb9cfe7b895c46c478afe3c8dd75f10c21cdf1b3e78a0e4",
+        "size": 13862817
+      }
+    },
+    {
+      "id": "nco-redux-pro-max-legendary-edition",
+      "title": "NCO Redux Pro Max Legendary Edition",
+      "author": "Remiu",
+      "version": "2.6",
+      "description": "based on NCO Redux, with much more fun tool to play!",
+      "tags": [
+        "Nova Covert Ops",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Nova Covert Ops",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/nco/redux-2.6.zip",
+        "sha256": "49cde17e0ded14939ac8e601e96e4ca8b5da3f6206d91fcd0efd00a085e9ae35",
+        "size": 49206946
+      }
+    },
+    {
+      "id": "nova-outlaw-ops",
+      "title": "Nova: Outlaw Ops",
+      "author": "Enoki",
+      "version": "1.50",
+      "description": "Outlaws go brr",
+      "tags": [
+        "Nova Covert Ops",
+        "CCM package"
+      ],
+      "requirements": {
+        "campaign": "Nova Covert Ops",
+        "platforms": [
+          "Windows",
+          "macOS",
+          "Linux / Wine"
+        ]
+      },
+      "package": {
+        "url": "https://files.ccm-reborn.mikilabs.io/campaigns/nco/outlaw-ops-1.50.zip",
+        "sha256": "6a8bf8f4b4e13f425f3e8102fee5480a93387491e875556dbb559619831d34d4",
+        "size": 199940782
+      }
+    }
+  ]
+}

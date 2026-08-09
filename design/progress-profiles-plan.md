@@ -1,8 +1,11 @@
 # Progress profiles and reversible campaign switching
 
-This is the design target for the next implementation phase. The current
-`Install` action is still a read-only dry-run; it does not yet apply profile
-switches.
+This is a forward-looking design target, not a statement that every section is
+already shipped. The current implementation provides transactional per-account
+campaign snapshots, explicit dry-runs, and an account-profile gate. Stable
+family/major identity, profile manifests, progress ordering, migration, and
+the exact byte-for-byte XML invariant below remain planned work and must not
+be inferred from the current catalog schema.
 
 ## 1. Stable identity and versioning
 
@@ -23,6 +26,26 @@ untouched rollback point.
 The package SHA identifies an immutable package revision; it must not become
 the profile identity. A manifest records the currently installed package SHA
 and the migration history.
+
+### Installed package inventory
+
+Every successful package copy also writes an atomic inventory under the game
+directory, for example:
+
+`<game>/.ccm-reborn/installed/Maps_Campaign_swarm.json`
+
+It records the catalog campaign ID, version, package SHA-256, target branch, and
+every destination written by the archive (including its archive member, size,
+kind, and file SHA-256). This is an ownership ledger, not a best-effort scan.
+Before an active ledger is replaced or restored, CCM copies it to
+`installed/history/` for post-mortem inspection.
+On a same-major update CCM first validates the old managed state and inventory,
+restores overwritten originals or removes only package-owned files, and only
+then copies the new archive. A changed or missing old file stops the operation;
+CCM never deletes an unverified path. The dry-run lists these operations in a
+separate `... before update` group. Legacy installations without this inventory
+are accepted once through the existing managed state and receive the exact
+inventory on their next successful install.
 
 ## 2. Profile manifest
 

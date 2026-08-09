@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "A safe, cross-platform custom campaign manager for StarCraft II"
 authors = ["CCM Reborn contributors"]
 edition = "2021"
+default-run = "ccm-reborn"
 
 [lib]
 name = "ccm_reborn_lib"
@@ -13,6 +14,7 @@ crate-type = ["lib", "cdylib", "staticlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+fs2 = "0.4"
 hex = "0.4"
 mpq = "0.8.1"
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
@@ -23,3 +25,6 @@ tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"
 uuid = { version = "1", features = ["v4"] }
 zip = { version = "2", default-features = false, features = ["deflate"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_Storage_FileSystem"] }

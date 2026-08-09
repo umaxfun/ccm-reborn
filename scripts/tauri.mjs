@@ -4,9 +4,16 @@ import { resolve } from "node:path";
 
 const args = process.argv.slice(2);
 const tauriBin = resolve("node_modules/.bin/tauri");
+// Desktop launchers do not always inherit the interactive shell's Rust PATH.
+// Keep the project runnable from a fresh terminal as well as from Codex.
+const cargoBin = process.env.HOME ? resolve(process.env.HOME, ".cargo/bin") : null;
+const childEnv = {
+  ...process.env,
+  PATH: [cargoBin, process.env.PATH].filter(Boolean).join(":"),
+};
 
 function run(command, commandArgs) {
-  const child = spawn(command, commandArgs, { stdio: "inherit" });
+  const child = spawn(command, commandArgs, { stdio: "inherit", env: childEnv });
   child.on("error", (error) => {
     console.error(error.message);
     process.exit(1);
@@ -34,14 +41,14 @@ async function runDev() {
     "--host", "127.0.0.1",
     "--port", String(port),
     "--strictPort",
-  ], { stdio: "inherit" });
+  ], { stdio: "inherit", env: childEnv });
   const override = JSON.stringify({
     build: {
       beforeDevCommand: null,
       devUrl: `http://127.0.0.1:${port}`,
     },
   });
-  const tauri = spawn(tauriBin, ["dev", "--config", override, ...args.slice(1)], { stdio: "inherit" });
+  const tauri = spawn(tauriBin, ["dev", "--config", override, ...args.slice(1)], { stdio: "inherit", env: childEnv });
 
   let stopping = false;
   const stop = (code = 0) => {

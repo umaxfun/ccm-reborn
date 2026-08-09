@@ -14,12 +14,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Heart of the Swarm",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Heart of the Swarm"
       },
       "package": {
         "path": "packages/YuriMod.zip",
@@ -38,12 +33,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Heart of the Swarm",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Heart of the Swarm"
       },
       "package": {
         "path": "packages/Abathur's Whimsy.zip",
@@ -62,12 +52,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Heart of the Swarm",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Heart of the Swarm"
       },
       "package": {
         "path": "packages/Heart of the Swarm Randomizer.zip",
@@ -86,12 +71,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Heart of the Swarm",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Heart of the Swarm"
       },
       "package": {
         "path": "packages/paintball hots v1.1.3.zip",
@@ -110,12 +90,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Heart of the Swarm",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Heart of the Swarm"
       },
       "package": {
         "path": "packages/Heart of the Swarm Ai allies.zip",
@@ -134,12 +109,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Heart of the Swarm",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Heart of the Swarm"
       },
       "package": {
         "path": "packages/Overmindv1.02.zip",
@@ -158,12 +128,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Heart of the Swarm",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Heart of the Swarm"
       },
       "package": {
         "path": "packages/KerriganRogue.zip",
@@ -182,12 +147,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Heart of the Swarm",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Heart of the Swarm"
       },
       "package": {
         "path": "packages/NightmareHotS.zip",
@@ -206,12 +166,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Heart of the Swarm",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Heart of the Swarm"
       },
       "package": {
         "path": "packages/Real-Scale_HotS_v2.8.zip",
@@ -230,12 +185,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Heart of the Swarm",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Heart of the Swarm"
       },
       "package": {
         "path": "packages/The Swarm Reborn.zip",
@@ -254,12 +204,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Heart of the Swarm",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Heart of the Swarm"
       },
       "package": {
         "path": "packages/VioletsHoTSReworkMod.zip",
@@ -278,12 +223,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Heart of the Swarm",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Heart of the Swarm"
       },
       "package": {
         "path": "packages/Heart of Eyeser(CCM Available)(poor google translate).zip",
@@ -302,12 +242,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Legacy of the Void",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Legacy of the Void"
       },
       "package": {
         "path": "packages/AOP.zip",
@@ -326,12 +261,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Legacy of the Void",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Legacy of the Void"
       },
       "package": {
         "path": "packages/Legacy of the Void- Fight with ally!.zip",
@@ -350,12 +280,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Legacy of the Void",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Legacy of the Void"
       },
       "package": {
         "path": "packages/LotV Gauntlet.zip",
@@ -374,12 +299,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Legacy of the Void",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Legacy of the Void"
       },
       "package": {
         "path": "packages/Legacy of the Xel'Naga (1).zip",
@@ -398,12 +318,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Legacy of the Void",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Legacy of the Void"
       },
       "package": {
         "path": "packages/paintball lotv v1.1.6.zip",
@@ -422,12 +337,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Legacy of the Void",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Legacy of the Void"
       },
       "package": {
         "path": "packages/LotVChaos.zip",
@@ -446,12 +356,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Legacy of the Void",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Legacy of the Void"
       },
       "package": {
         "path": "packages/NightmareLotV.zip",
@@ -470,12 +375,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Legacy of the Void",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Legacy of the Void"
       },
       "package": {
         "path": "packages/Real-Scale_LotV_v2.8.zip",
@@ -494,12 +394,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Legacy of the Void",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Legacy of the Void"
       },
       "package": {
         "path": "packages/Legacy of Purifier 1.04(CCM)_translated.zip",
@@ -518,12 +413,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Legacy of the Void",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Legacy of the Void"
       },
       "package": {
         "path": "packages/喵头嘤の奇妙战役Mod (CCM Translated).zip",
@@ -542,12 +432,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Nova Covert Ops",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Nova Covert Ops"
       },
       "package": {
         "path": "packages/AOC Mod.zip",
@@ -566,12 +451,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Nova Covert Ops",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Nova Covert Ops"
       },
       "package": {
         "path": "packages/NCO_Redux_Pro_Max_Legendary_Edition.zip",
@@ -590,12 +470,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Nova Covert Ops",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Nova Covert Ops"
       },
       "package": {
         "path": "packages/nova_outlaw_ops.zip",
@@ -614,12 +489,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Wings of Liberty",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Wings of Liberty"
       },
       "package": {
         "path": "packages/CoopAI.zip",
@@ -638,12 +508,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Wings of Liberty",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Wings of Liberty"
       },
       "package": {
         "path": "packages/JunkerWoL.zip",
@@ -662,12 +527,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Wings of Liberty",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Wings of Liberty"
       },
       "package": {
         "path": "packages/Lingofwiberty1.25.zip",
@@ -686,12 +546,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Wings of Liberty",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Wings of Liberty"
       },
       "package": {
         "path": "packages/Mindhawk's Challenge Gauntlet.zip",
@@ -710,12 +565,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Wings of Liberty",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Wings of Liberty"
       },
       "package": {
         "path": "packages/WoL Nightmare (Moebius Pack).zip",
@@ -734,12 +584,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Wings of Liberty",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Wings of Liberty"
       },
       "package": {
         "path": "packages/Wings of Liberty Nightmare Difficulty.zip",
@@ -758,12 +603,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Wings of Liberty",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Wings of Liberty"
       },
       "package": {
         "path": "packages/RaynorRogue.zip",
@@ -782,12 +622,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Wings of Liberty",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Wings of Liberty"
       },
       "package": {
         "path": "packages/Real-Scale_WoL_v2.8.zip",
@@ -806,12 +641,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Wings of Liberty",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Wings of Liberty"
       },
       "package": {
         "path": "packages/WarcraftWoL-RELEASE-1.1.3.zip",
@@ -830,12 +660,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Wings of Liberty",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Wings of Liberty"
       },
       "package": {
         "path": "packages/WoM-1.3_Armory.zip",
@@ -854,12 +679,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Wings of Liberty",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Wings of Liberty"
       },
       "package": {
         "path": "packages/paintball wol v1.1.8.zip",
@@ -878,12 +698,7 @@
         "CCM package"
       ],
       "requirements": {
-        "campaign": "Wings of Liberty",
-        "platforms": [
-          "Windows",
-          "macOS",
-          "Linux / Wine"
-        ]
+        "campaign": "Wings of Liberty"
       },
       "package": {
         "path": "packages/WOL Tychus Edition.zip",

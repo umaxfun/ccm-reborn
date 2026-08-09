@@ -11,7 +11,15 @@ CCM Reborn installs the existing CCM ZIP layout; it does **not** invent a packag
 | Legacy / Void / LotV | `Maps/Campaign/void` |
 | Nova / Covert / NCO | `Maps/Campaign/nova` |
 
-Before installing, the app checks the ZIP SHA-256, stages its contents, snapshots the entire target campaign directory, clears it, and then copies the package. **Restore original campaigns** clears that target again and restores the snapshot. A small journal handles a crash in the middle of a copy.
+Before installing, the app checks the ZIP SHA-256, stages its contents, snapshots its managed campaign branch, clears it, and then copies the package. WoL deliberately leaves sibling campaign branches such as `swarm` and `void` alone. **Restore original campaigns** targets one declared campaign slot and restores that slot’s snapshot. A small journal handles a crash in the middle of a copy.
+
+Successful installs also write an exact package inventory to
+`<game>/.ccm-reborn/installed/`. It contains every archive member copied to the
+game, its destination, size, and SHA-256. When a package is updated, the new
+archive is verified and staged first; then the previous managed files are
+verified and restored or removed before the new files are copied. A changed or
+missing old file stops the update rather than deleting an unowned path. The
+previous inventory is retained under `installed/history/` before it is replaced.
 
 ## Local development
 
@@ -24,11 +32,50 @@ npm run tauri dev
 
 The `tauri dev` script selects a free localhost port each time, so it does not collide with other Vite/Tauri projects.
 
-The **Install** buttons are currently read-only dry-runs: they validate the archive, enumerate every campaign/dependency file with source and destination, discover the selected StarCraft II account profile, and show the exact bank/save moves plus the target `CampaignProgress.xml` attributes that a future switch would snapshot and reset. No StarCraft II files are changed. Applying a plan will be added only after the progress-isolation and recovery tests are complete.
+**Install** first produces a read-only dry-run: it validates the archive,
+enumerates campaign/dependency operations and the bank/save/progress changes
+CCM can verify (ambiguous or unreadable saves are called out rather than
+guessed). Once an explicit StarCraft II account profile is selected in
+**Sources**, the review dialog enables **Apply installation**. The same
+transactional Rust core is used by the UI and `ccm install`; it requires SC2
+to be closed and rolls back profile and campaign files on failure.
 
 The broader profile, progress ordering, version identity, migration, and
 Yuri → Abathur → Yuri round-trip design is documented in
 [`design/progress-profiles-plan.md`](design/progress-profiles-plan.md).
+
+The standalone CLI uses the same Rust core as the Tauri UI and is available without launching the GUI:
+
+```sh
+cargo run --manifest-path src-tauri/Cargo.toml --bin ccm -- help
+cargo run --manifest-path src-tauri/Cargo.toml --bin ccm -- plan \
+  --game-dir /path/to/fixture-game --archive /path/to/package.zip \
+  --campaign-id nightmare-v1 --title "Nightmare" --sha256 HEX \
+  --output dry-run.json
+cargo run --manifest-path src-tauri/Cargo.toml --bin ccm -- installed \
+  --game-dir "/path/to/StarCraft II" --target Maps/Campaign/swarm
+cargo run --manifest-path src-tauri/Cargo.toml --bin ccm -- install \
+  --game-dir "/path/to/StarCraft II" --archive /path/to/package.zip \
+  --campaign-id nightmare-v1 --title "Nightmare" --sha256 HEX \
+  --profile-dir "/path/to/StarCraft II/Accounts/..." --confirm APPLY
+cargo run --manifest-path src-tauri/Cargo.toml --bin ccm -- restore \
+  --game-dir "/path/to/StarCraft II" --profile-dir "/path/to/StarCraft II/Accounts/..." \
+  --target Maps/Campaign/swarm --confirm RESTORE
+cargo run --manifest-path src-tauri/Cargo.toml --bin ccm -- summary \
+  --root /path/to/fixture-profile --output fixture-summary.json
+cargo run --manifest-path src-tauri/Cargo.toml --bin ccm -- profile-key \
+  --family nightmare --major 1 --campaign-id nightmare-v1
+cargo run --manifest-path src-tauri/Cargo.toml --bin ccm -- sort-summary \
+  --input progress-summary.json --output sorted-summary.json
+cargo run --manifest-path src-tauri/Cargo.toml --bin ccm -- roundtrip-check \
+  --root /path/to/restored/profile --manifest /path/to/yuri/manifest.json
+```
+
+All commands are read-only except `install` and `restore`; each requires its
+literal confirmation token after reviewing the relevant plan/state. For a
+live game, `install` and `restore` also require the exact `--profile-dir`.
+`restore` always requires one explicit campaign `--target`; it never guesses
+which of the four campaign slots you meant.
 
 Choose the directory that contains SC2's `Maps` directory (on Windows, normally the directory containing `SC2_x64.exe`) in **Configure sources**. Use a disposable SC2 install for development.
 
@@ -48,8 +95,7 @@ Each catalog entry requires metadata for display and a verified package:
       "description": "A short description.",
       "tags": ["HotS", "randomizer"],
       "requirements": {
-        "campaign": "Heart of the Swarm",
-        "platforms": ["Windows", "macOS", "Linux / Wine"]
+        "campaign": "Heart of the Swarm"
       },
       "package": {
         "path": "./packages/hots-randomizer.zip",

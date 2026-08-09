@@ -4,9 +4,11 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "check:source-size": "node scripts/check-source-size.mjs",
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
-    "tauri": "node scripts/tauri.mjs"
+    "tauri": "node scripts/tauri.mjs",
+    "catalog:publish-initial": "node scripts/publish-initial-catalog.mjs"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.0.0",
