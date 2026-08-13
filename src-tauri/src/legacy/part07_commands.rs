@@ -47,12 +47,17 @@ fn load_catalog_blocking(source: String) -> Result<LoadedCatalog, String> {
         return Err("Enter a catalog.json path or an HTTPS catalog URL.".into());
     }
 
-    let (catalog_json, source_kind, local_directory) = if source.starts_with("https://") {
-        (
-            download_text(source, 2 * 1024 * 1024)?,
-            "remote".to_string(),
-            None,
-        )
+    let (catalog_json, source_kind, local_directory, fetched_remote) = if source.starts_with("https://") {
+        match download_text(source, 2 * 1024 * 1024) {
+            Ok(catalog) => (catalog, "remote".to_string(), None, true),
+            Err(download_error) => (
+                read_cached_catalog(source, 2 * 1024 * 1024)
+                    .map_err(|cache_error| format!("{download_error} {cache_error}"))?,
+                "cached".to_string(),
+                None,
+                false,
+            ),
+        }
     } else {
         let path = PathBuf::from(source);
         if path.file_name().and_then(|name| name.to_str()) != Some("catalog.json") {
@@ -69,6 +74,7 @@ fn load_catalog_blocking(source: String) -> Result<LoadedCatalog, String> {
             fs::read_to_string(&canonical).map_err(io_error)?,
             "local".to_string(),
             Some(directory),
+            false,
         )
     };
 
@@ -114,6 +120,11 @@ fn load_catalog_blocking(source: String) -> Result<LoadedCatalog, String> {
         });
     }
 
+    if fetched_remote {
+        // A cache is only written after the full catalog has parsed and each
+        // entry passed its HTTPS, hash, size, and ID validation.
+        let _ = cache_catalog(source, &catalog_json);
+    }
     Ok(LoadedCatalog {
         format: catalog.format,
         name: catalog.name,
@@ -155,7 +166,7 @@ fn install_campaign_blocking(request: InstallRequest) -> Result<InstallResult, S
     recover_interrupted_install(&root)?;
 
     let expected_hash = normalize_sha256(&request.sha256)?;
-    let archive = acquire_archive(&request.archive_source)?;
+    let archive = acquire_archive(&request.archive_source, &expected_hash, request.package_size)?;
     validate_declared_package_size(request.package_size, fs::metadata(&archive.path).map_err(io_error)?.len())?;
     // `install_archive` validates and stages the new package before it touches
     // the old install. This prevents a bad download from deleting the current

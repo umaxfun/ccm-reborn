@@ -161,7 +161,22 @@ fn package_destination(target_path: &str, relative: &Path) -> Result<PathBuf, St
     if let Some(destination) = dependency_destination(relative) {
         return Ok(destination);
     }
-    Ok(safe_relative_path(target_path)?.join(relative))
+    let target = safe_campaign_target(target_path)?;
+    // Blizzard exposes Whispers of Oblivion as a sibling virtual campaign,
+    // rather than as a child of the main LotV campaign.  A CCM archive keeps
+    // the conventional `voidprologue/...` layout, so route just that subtree
+    // to the path the client actually resolves at launch.
+    if target == Path::new("Maps/Campaign/void") {
+        let mut components = relative.components();
+        if matches!(components.next(), Some(Component::Normal(name)) if name.to_string_lossy().eq_ignore_ascii_case("voidprologue")) {
+            let mut destination = PathBuf::from("Maps/Campaign/VoidPrologue");
+            for component in components {
+                destination.push(component.as_os_str());
+            }
+            return Ok(destination);
+        }
+    }
+    Ok(target.join(relative))
 }
 
 fn dependency_destination(relative: &Path) -> Option<PathBuf> {
@@ -316,6 +331,36 @@ fn safe_campaign_target(value: &str) -> Result<PathBuf, String> {
         "Maps/Campaign" | "Maps/Campaign/swarm" | "Maps/Campaign/void" | "Maps/Campaign/nova" => Ok(path),
         _ => Err("Managed installation state has an invalid campaign target.".into()),
     }
+}
+
+/// A package normally owns exactly one campaign slot.  Whispers of Oblivion
+/// is the one LotV exception: SC2 launches it from a sibling virtual path.
+/// Keep this short allow-list separate from the primary slot validation so a
+/// package can never claim an arbitrary directory under `Maps/Campaign`.
+fn safe_campaign_root(value: &str) -> Result<PathBuf, String> {
+    let path = safe_relative_path(value)?;
+    match value {
+        "Maps/Campaign"
+        | "Maps/Campaign/swarm"
+        | "Maps/Campaign/void"
+        | "Maps/Campaign/nova"
+        | "Maps/Campaign/VoidPrologue" => Ok(path),
+        _ => Err("Managed installation state has an invalid campaign root.".into()),
+    }
+}
+
+fn campaign_root_for_destination(target: &Path, destination: &Path) -> Result<PathBuf, String> {
+    if destination.starts_with(target) {
+        return Ok(target.to_path_buf());
+    }
+    let prologue = Path::new("Maps/Campaign/VoidPrologue");
+    if target == Path::new("Maps/Campaign/void") && destination.starts_with(prologue) {
+        return Ok(prologue.to_path_buf());
+    }
+    Err(format!(
+        "Campaign package file {} is outside its managed campaign roots.",
+        path_string(destination)
+    ))
 }
 
 fn path_string(path: &Path) -> String {

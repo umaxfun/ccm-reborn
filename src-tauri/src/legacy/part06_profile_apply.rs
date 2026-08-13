@@ -52,12 +52,13 @@ where
     let Some(discovered) = select_starcraft_profile(profile_dir)? else {
         return Ok(ProfileTransaction { entries: Vec::new() });
     };
-    reject_ambiguous_legacy_profile_store(source_campaign_id)?;
-    reject_ambiguous_legacy_profile_store(target_campaign_id)?;
+    let profile_store = profile_store_base_for(&discovered.path)?;
+    reject_ambiguous_legacy_profile_store(source_campaign_id, &profile_store)?;
+    reject_ambiguous_legacy_profile_store(target_campaign_id, &profile_store)?;
     apply_profile_transition_at_with_hook(
         root,
         &discovered.path,
-        &profile_store_base_for(&discovered.path)?,
+        &profile_store,
         source_target,
         target,
         source_campaign_id,
@@ -202,6 +203,7 @@ where
                     target_path: source_target.to_string(),
                     dependency_names: source_dependency_names.clone(),
                     captured_at: unix_timestamp(),
+                    legacy_migrated: false,
                 },
             )?;
         }

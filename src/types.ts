@@ -12,7 +12,7 @@ export type Campaign = {
 export type Catalog = {
   name: string;
   updatedAt: string;
-  sourceKind: "local" | "remote";
+  sourceKind: "local" | "remote" | "cached";
   campaigns: Campaign[];
 };
 
@@ -49,6 +49,9 @@ export type SavedCampaignResume = {
   saveCount: number;
   latestSave: SavedCampaignSave | null;
   unverifiedSaveCount: number;
+  lastPlayedAt: number | null;
+  lastPlayedSource: "verified-save" | "legacy-ccm-snapshot" | null;
+  legacyMigrationPending: boolean;
 };
 export type InstallResult = {
   campaignId: string;

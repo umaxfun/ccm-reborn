@@ -92,11 +92,7 @@ fn validate_managed_state(state: &ManagedState) -> Result<(), String> {
     let _ = safe_backup_path(&state.backup_dir)?;
     let target = state.target_path_or_first_clear();
     let target_path = safe_campaign_target(&target)?;
-    if state.cleared_directories.len() != 1
-        || state.cleared_directories.first().map(String::as_str) != Some(target.as_str())
-    {
-        return Err("Managed installation state must own exactly one campaign target.".into());
-    }
+    let mut campaign_roots = vec![target_path.clone()];
     for file in &state.files {
         let destination = safe_relative_path(&file.destination)?;
         if destination.starts_with(MANAGER_DIRECTORY) {
@@ -110,11 +106,22 @@ fn validate_managed_state(state: &ManagedState) -> Result<(), String> {
                 || matches!(first, Some(Component::Normal(name)) if is_wol_owned_asset_directory(name))
         });
         if !is_target_file && !destination.starts_with("Mods") {
-            return Err("Managed installation state contains a file outside its campaign target or Mods.".into());
+            let root = campaign_root_for_destination(&target_path, &destination)?;
+            if !campaign_roots.contains(&root) {
+                campaign_roots.push(root);
+            }
         }
         if let Some(backup) = &file.backup_path {
             let _ = safe_backup_path(backup)?;
         }
+    }
+    let cleared_roots = state
+        .cleared_directories
+        .iter()
+        .map(|directory| safe_campaign_root(directory))
+        .collect::<Result<Vec<_>, _>>()?;
+    if cleared_roots != campaign_roots {
+        return Err("Managed installation state has invalid campaign roots.".into());
     }
     Ok(())
 }

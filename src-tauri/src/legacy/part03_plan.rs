@@ -29,7 +29,8 @@ fn plan_campaign_install_blocking(request: InstallRequest) -> Result<DryRunPlan,
     {
         return Err("Choose the exact StarCraft II account profile before reviewing a live install.".into());
     }
-    let archive = acquire_archive(&request.archive_source)?;
+    let expected_sha256 = normalize_sha256(&request.sha256)?;
+    let archive = acquire_archive(&request.archive_source, &expected_sha256, request.package_size)?;
     let archive_path = &archive.path;
 
     let archive_size = fs::metadata(&archive_path).map_err(io_error)?.len();
@@ -37,8 +38,11 @@ fn plan_campaign_install_blocking(request: InstallRequest) -> Result<DryRunPlan,
     if archive_size > MAX_ARCHIVE_BYTES {
         return Err("Package is larger than the allowed archive size.".into());
     }
-    let archive_sha256 = sha256_file(&archive_path)?;
-    let expected_sha256 = normalize_sha256(&request.sha256)?;
+    let archive_sha256 = if archive.checksum_verified {
+        expected_sha256.clone()
+    } else {
+        sha256_file(&archive_path)?
+    };
     if archive_sha256 != expected_sha256 {
         return Err("The local archive does not match the catalog SHA-256. No files were changed.".into());
     }
@@ -47,7 +51,11 @@ fn plan_campaign_install_blocking(request: InstallRequest) -> Result<DryRunPlan,
     let previous_state = read_state_for_target(&root, &package.target_path)?;
     let package_files = inspect_ccm_package_files(&archive_path, &package)?;
     refuse_nested_wol_package(&package.target_path, &package_files)?;
-    let campaign_files = collect_campaign_target_files(&root, &package.target_path)?;
+    let campaign_roots = campaign_roots_for_package_files(&package.target_path, &package_files)?;
+    let mut campaign_files = Vec::new();
+    for campaign_root in &campaign_roots {
+        campaign_files.extend(collect_campaign_target_files(&root, &path_string(campaign_root))?);
+    }
     let dependency_roots = dependency_roots_from_planned_files(&package_files);
     let mut dependency_files = Vec::new();
     for dependency_root in &dependency_roots {

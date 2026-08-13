@@ -111,7 +111,26 @@ Each catalog entry requires metadata for display and a verified package:
 
 ## Cloudflare publishing
 
-Put immutable ZIPs in R2, for example `campaigns/hots-randomizer/1.0.2.zip`, then publish the same catalog JSON from a Worker or public bucket. Replace local `path` with HTTPS `url`:
+[`catalog/catalog.json`](catalog/catalog.json) is the production source of truth.
+It contains only public HTTPS URLs, SHA-256 checksums, and byte sizes; the ZIP
+files do not need to stay in the repository after publication.
+
+To add or update a campaign, give its local ZIP a short lowercase slug. The
+publisher reads its `metadata.txt`, validates the archive, uploads an immutable
+object to R2, writes a history snapshot, and publishes `catalog.json` last:
+
+```sh
+npm run catalog:publish -- ~/Downloads/LOTVRogue.zip --slug artanis-rogue
+```
+
+Pass `--id`, `--version`, `--title`, `--author`, `--description`, or
+`--campaign wol|hots|lotv|nco` only when the ZIP metadata needs correction.
+Use `--dry-run` to validate and show the intended URL without changing R2 or
+the catalog. Existing R2 objects are never overwritten; publish a corrected
+archive with a new version or slug.
+
+The publisher creates readable immutable archive names such as
+`campaigns/hots/yuri-1.09.zip` and replaces local `path` with HTTPS `url`:
 
 ```json
 "package": {
@@ -122,6 +141,9 @@ Put immutable ZIPs in R2, for example `campaigns/hots-randomizer/1.0.2.zip`, the
 ```
 
 Point **Configure sources** at the HTTPS URL for `catalog.json`. The Rust backend fetches the catalog and package, so browser CORS is not part of the client path.
+
+After publishing, verify every public package size with `npm run catalog:smoke`.
+Add `-- --verify f-yuri-of-the-swarm` to download and verify one package's SHA-256 too.
 
 ## Checks
 

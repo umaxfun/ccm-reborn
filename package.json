@@ -8,7 +8,9 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "tauri": "node scripts/tauri.mjs",
-    "catalog:publish-initial": "node scripts/publish-initial-catalog.mjs"
+    "catalog:publish-initial": "node scripts/publish-initial-catalog.mjs",
+    "catalog:publish": "bash scripts/publish-campaign.sh",
+    "catalog:smoke": "node scripts/check-cloud-catalog.mjs"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.0.0",

@@ -28,12 +28,10 @@ fn install_archive(
     let managed_root = manager_root(root);
     let staging = managed_root.join("staging").join(Uuid::new_v4().to_string());
     fs::create_dir_all(&staging).map_err(io_error)?;
-
     let result = (|| {
         let staged_files = extract_ccm_package(archive_path, &package, &staging)?;
         ensure_shared_dependency_baselines(root, &dependency_roots_from_staged(&staged_files))?;
         let previous_install = snapshot_previous_install(root, &staging, &package.target_path)?;
-
         let previous_state = read_state_for_target(root, &package.target_path)?;
         let source_target = previous_state
             .as_ref()
@@ -87,7 +85,6 @@ fn install_archive(
                 completed: false,
             },
         )?;
-
         // All validation and extraction is complete. Only now can we inspect
         // the previous managed state and restore/remove its package-owned
         // files. A changed file is a hard stop; we never guess what is safe to
@@ -151,11 +148,13 @@ fn install_archive(
             return Err(error);
         }
 
-        if let Err(error) = clear_campaign_target(&root, &package.target_path) {
-            if rollback_install_failure(root, &state, &manifest_path, previous_install.as_ref(), &profile_transaction).is_ok() {
-                let _ = fs::remove_file(pending_install_path(root));
+        for directory in &state.cleared_directories {
+            if let Err(error) = clear_campaign_target(&root, directory) {
+                if rollback_install_failure(root, &state, &manifest_path, previous_install.as_ref(), &profile_transaction).is_ok() {
+                    let _ = fs::remove_file(pending_install_path(root));
+                }
+                return Err(error);
             }
-            return Err(error);
         }
         if let Err(error) = clear_dependency_roots(root, &dependency_roots_from_staged(&staged_files)) {
             if rollback_install_failure(root, &state, &manifest_path, previous_install.as_ref(), &profile_transaction).is_ok() {
@@ -444,15 +443,18 @@ fn backup_campaign_directory(
     let mut files = Vec::new();
     let mut positions = HashMap::new();
 
-    for original in collect_campaign_target_files(root, target_path)? {
-        record_original_file(
-            &original,
-            root,
-            &backup_root,
-            &backup_dir,
-            &mut files,
-            &mut positions,
-        )?;
+    let campaign_roots = campaign_roots_for_staged_files(target_path, staged_files)?;
+    for campaign_root in &campaign_roots {
+        for original in collect_campaign_target_files(root, &path_string(campaign_root))? {
+            record_original_file(
+                &original,
+                root,
+                &backup_root,
+                &backup_dir,
+                &mut files,
+                &mut positions,
+            )?;
+        }
     }
 
     for dependency_root in dependency_roots_from_staged(staged_files) {
@@ -491,7 +493,7 @@ fn backup_campaign_directory(
         target_path: target_path.to_string(),
         installed_at: unix_timestamp(),
         backup_dir,
-        cleared_directories: vec![target_path.to_string()],
+        cleared_directories: campaign_roots.into_iter().map(|root| path_string(&root)).collect(),
         files,
     })
 }

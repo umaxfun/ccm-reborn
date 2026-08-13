@@ -1,6 +1,7 @@
 struct AcquiredArchive {
     path: PathBuf,
     is_temporary: bool,
+    checksum_verified: bool,
 }
 
 impl Drop for AcquiredArchive {
@@ -11,7 +12,7 @@ impl Drop for AcquiredArchive {
     }
 }
 
-fn acquire_archive(source: &str) -> Result<AcquiredArchive, String> {
+fn acquire_archive(source: &str, expected_sha256: &str, expected_size: Option<u64>) -> Result<AcquiredArchive, String> {
     let source = source.trim();
     if !source.starts_with("https://") {
         let path = PathBuf::from(source);
@@ -21,12 +22,21 @@ fn acquire_archive(source: &str) -> Result<AcquiredArchive, String> {
         return Ok(AcquiredArchive {
             path,
             is_temporary: false,
+            checksum_verified: false,
+        });
+    }
+    if let Some(expected_size) = expected_size {
+        return Ok(AcquiredArchive {
+            path: cache_remote_archive(source, expected_sha256, expected_size)?,
+            is_temporary: false,
+            checksum_verified: true,
         });
     }
     let path = download_archive(source)?;
     Ok(AcquiredArchive {
         path,
         is_temporary: true,
+        checksum_verified: false,
     })
 }
 
@@ -183,7 +193,7 @@ fn safe_game_path(root: &Path, relative: &Path) -> Result<PathBuf, String> {
 }
 
 fn collect_campaign_target_files(root: &Path, target: &str) -> Result<Vec<PathBuf>, String> {
-    let target = safe_campaign_target(target)?;
+    let target = safe_campaign_root(target)?;
     let path = safe_game_path(root, &target)?;
     if target != Path::new("Maps/Campaign") {
         return collect_regular_files(&path);
@@ -212,7 +222,7 @@ fn collect_campaign_target_files(root: &Path, target: &str) -> Result<Vec<PathBu
 }
 
 fn clear_campaign_target(root: &Path, target: &str) -> Result<(), String> {
-    let target = safe_campaign_target(target)?;
+    let target = safe_campaign_root(target)?;
     let path = safe_game_path(root, &target)?;
     if target != Path::new("Maps/Campaign") {
         return clear_directory(&path);

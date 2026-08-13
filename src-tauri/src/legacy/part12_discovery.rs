@@ -404,6 +404,7 @@ pub fn run() {
             restore_original_campaigns,
             launch_current_campaign,
             inspect_saved_campaign_resumes,
+            migrate_legacy_profile,
             resolve_game_directory,
             detect_game_directories,
             detect_starcraft_profiles

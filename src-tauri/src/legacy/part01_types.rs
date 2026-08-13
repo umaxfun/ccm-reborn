@@ -44,6 +44,13 @@ pub struct InstallRequest {
     game_dir: String,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct MigrateLegacyProfileRequest {
+    campaign_id: String,
+    profile_dir: String,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct CatalogDocument {
@@ -246,6 +253,9 @@ pub struct SavedCampaignResume {
     save_count: usize,
     latest_save: Option<SavedCampaignSave>,
     unverified_save_count: usize,
+    last_played_at: Option<u64>,
+    last_played_source: Option<String>,
+    legacy_migration_pending: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -265,6 +275,15 @@ struct CampaignProfileResumeManifest {
     target_path: String,
     dependency_names: Vec<String>,
     captured_at: u64,
+    #[serde(default)]
+    legacy_migrated: bool,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct LegacyProfileMigration {
+    campaign_id: String,
+    files_copied: usize,
 }
 
 #[derive(Debug, Serialize)]

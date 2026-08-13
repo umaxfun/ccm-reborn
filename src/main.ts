@@ -2,27 +2,24 @@ import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import "./styles.css";
 import type {
-  Campaign, Catalog, CurrentCampaign, DryRunPlan, GameDirectoryCandidate, Inspection,
+  Catalog, DryRunPlan, GameDirectoryCandidate, Inspection,
   InstallResult, RestoreResult, SavedCampaignResume, StarcraftProfileCandidate,
 } from "./types";
 import { renderPlanDialog } from "./render-plan";
 import { renderLibrary } from "./render-library";
-import { campaignSlot, coverClass, formatBytes, isCurrentCatalogCampaign } from "./domain";
-import { profileName, resumeFor, resumeInstruction } from "./resume";
+import { isCurrentCatalogCampaign } from "./domain";
+import { profileName, resumeFor } from "./resume";
+import { migrateLegacyProfile, renderLegacyMigration } from "./legacy-migration";
+import { renderDashboard } from "./render-dashboard";
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("Application root is missing.");
 const root = app;
 
-const slots = [
-  { id: "wings-of-liberty", title: "Wings of Liberty", short: "WOL", colour: "ember" },
-  { id: "heart-of-the-swarm", title: "Heart of the Swarm", short: "HOTS", colour: "jade" },
-  { id: "legacy-of-the-void", title: "Legacy of the Void", short: "LOTV", colour: "void" },
-  { id: "nova-covert-ops", title: "Nova Covert Ops", short: "NCO", colour: "arc" },
-] as const;
-
-const defaultCatalog = import.meta.env.DEV ? "../dev-catalog/catalog.json" : "";
-let catalogSource = localStorage.getItem("ccm-catalog-source") ?? defaultCatalog;
+const communityCatalog = "https://files.ccm-reborn.mikilabs.io/catalog.json";
+const localDevCatalog = "../dev-catalog/catalog.json";
+const defaultCatalog = import.meta.env.DEV ? localDevCatalog : communityCatalog;
+let catalogSource = localStorage.getItem("ccm-catalog-source")?.trim() || defaultCatalog;
 let gameDir = localStorage.getItem("ccm-game-directory") ?? "";
 let profileDir = localStorage.getItem("ccm-profile-directory") ?? "";
 let profileCandidates: StarcraftProfileCandidate[] = [];
@@ -43,7 +40,7 @@ const escapeHtml = (value: string) => value.replace(/[&<>'"]/g, (character) =>
 
 function render() {
   const catalogLabel = catalog
-    ? `${escapeHtml(catalog.name)} · ${catalog.sourceKind === "local" ? "local catalog" : "Cloudflare catalog"}`
+    ? `${escapeHtml(catalog.name)} · ${catalog.sourceKind === "local" ? "local catalog" : catalog.sourceKind === "cached" ? "offline cloud cache" : "community cloud"}`
     : "Catalog unavailable";
   const locationLabel = gameDir ? escapeHtml(gameDir) : "Searching automatically…";
   const activeProfileLabel = profileDir
@@ -68,11 +65,12 @@ function render() {
       <header>
         <div><p class="eyebrow">${catalogLabel}</p><h1>${page === "dashboard" ? "Your campaigns" : "Campaign library"}</h1><p class="subhead">${page === "dashboard" ? `${locationLabel}<br /><span class="profile-context">${activeProfileLabel}</span>` : "Browse every package in the current catalog."}</p></div>
         <div class="header-actions">
-          <button class="settings-button" data-action="show-settings">Sources</button>
+          <button class="ghost compact" data-action="refresh-catalog" ${busy || !catalogSource ? "disabled" : ""}>Refresh</button><button class="settings-button" data-action="show-settings">Sources</button>
         </div>
       </header>
       ${message ? `<section class="status ${messageKind}"><span>${messageKind === "success" ? "✓" : messageKind === "error" ? "!" : "i"}</span><p>${escapeHtml(message)}</p></section>` : ""}
-      ${page === "dashboard" ? `<section class="campaign-dashboard">${slots.map(renderSlot).join("")}</section>` : renderLibrary({ catalog, inspection, selectedId, busy, gameDir, isCurrentCatalogCampaign: (campaign) => isCurrentCatalogCampaign(campaign, inspection) })}
+      ${renderLegacyMigration(catalog, savedResumes, profileDir, busy)}
+      ${page === "dashboard" ? renderDashboard({ catalog, inspection, savedResumes, busy, gameDir, profileDir, isCurrentCatalogCampaign: (campaign) => isCurrentCatalogCampaign(campaign, inspection) }) : renderLibrary({ catalog, inspection, selectedId, busy, gameDir, isCurrentCatalogCampaign: (campaign) => isCurrentCatalogCampaign(campaign, inspection) })}
     </main>
     <dialog id="settings-dialog">
       <form method="dialog" class="dialog-card">
@@ -80,8 +78,9 @@ function render() {
         <p class="eyebrow">SOURCES</p><h2>Catalog & game location</h2>
         <label>Catalog source
           <input id="catalog-source" spellcheck="false" value="${escapeHtml(catalogSource)}" placeholder="/path/to/catalog.json or https://…/catalog.json" />
-          <small>Local development reads <code>catalog.json</code>; production can point to a Cloudflare HTTPS URL.</small>
+          <small>Releases use the community cloud catalog by default. You can choose another HTTPS catalog or a local development catalog here.</small>
         </label>
+        <div class="directory-actions"><button type="button" class="ghost" data-action="use-cloud-catalog">Use community cloud</button>${import.meta.env.DEV ? '<button type="button" class="ghost" data-action="use-local-catalog">Use local dev catalog</button>' : ""}</div>
         <section class="detected-directory">
           <small>STARCRAFT II DIRECTORY</small>
           <strong>${gameDir ? escapeHtml(gameDir) : "No installation detected"}</strong>
@@ -115,50 +114,6 @@ function render() {
   if (planDialog && !planDialog.open) planDialog.showModal();
 }
 
-function renderSlot(slot: typeof slots[number]) {
-  const current = inspection?.activeCampaigns.find((campaign) => campaign.slot === slot.id);
-  const options = catalog?.campaigns.filter((campaign) => campaignSlot(campaign.requirements.campaign) === slot.id && !isCurrentCatalogCampaign(campaign, inspection)) ?? [];
-  // A package can only be "current" for its own campaign slot.  Looking it
-  // up across the whole catalog made the active HotS package leak its resume
-  // and Repair button into WoL/ LotV cards.
-  const currentPackage = catalog?.campaigns.find((campaign) =>
-    campaignSlot(campaign.requirements.campaign) === slot.id && isCurrentCatalogCampaign(campaign, inspection)
-  );
-  const currentTitle = current?.title ?? "StarCraft II directory not selected";
-  const currentMeta = current ? `${current.author} · ${current.version}` : "Detect the game directory to inspect its active campaign.";
-  const managed = inspection?.managedCampaigns.find((campaign) => campaign.slot === slot.id);
-  const managedHere = Boolean(managed && catalog?.campaigns.some((campaign) => campaign.id === managed.id));
-  // The managed state records the exact directory it owns. That is the
-  // authoritative slot; title/version matching against the catalog is only
-  // presentation and may change after an update.
-  const activeInstalled = Boolean(managed);
-  const activeResume = managed ? resumeFor(savedResumes, managed.id) : null;
-
-  return `
-    <article class="campaign-slot ${slot.colour}">
-      <header class="slot-header">
-        <div class="slot-sigil">${slot.short.slice(0, 1)}</div>
-        <div><p class="eyebrow">${slot.short}</p><h2>${slot.title}</h2></div>
-        <span class="slot-state ${current?.isModified ? "custom" : "original"}">${current?.isModified ? "CUSTOM" : "ORIGINAL / UNKNOWN"}</span>
-      </header>
-      <section class="current-install">
-        <div><small>CURRENTLY INSTALLED</small><strong>${escapeHtml(currentTitle)}</strong><span>${escapeHtml(currentMeta)}</span>${activeInstalled ? `<p class="resume-instruction"><small>${activeResume?.latestSave ? "CCM RESUME — DO NOT USE CLOUD CONTINUE" : "CCM START NEW CAMPAIGN"}</small>${escapeHtml(resumeInstruction(activeResume))}</p>` : ""}</div>
-        <div class="current-slot-actions"><button class="ghost play" data-action="play" ${!inspection?.canLaunch || busy ? "disabled" : ""}>Play current</button>${currentPackage ? `<button class="ghost repair" data-action="install" data-campaign="${escapeHtml(currentPackage.id)}" ${!gameDir || busy ? "disabled" : ""}>Repair</button>` : ""}${managed ? `<button class="ghost repair" data-action="restore" data-target="${escapeHtml(managed.targetPath)}" ${!gameDir || busy || !profileDir ? "disabled" : ""}>Restore original</button>` : ""}</div>
-      </section>
-      <section class="alternatives">
-        <div class="alternative-heading"><small>INSTALL SOMETHING ELSE</small><span>${options.length} available</span></div>
-        ${options.length ? options.map((campaign) => `
-          <article class="install-option">
-            <div class="option-cover cover-${coverClass(campaign.id)}">${escapeHtml(campaign.title.slice(0, 1).toUpperCase())}</div>
-            <div class="option-copy"><strong>${escapeHtml(campaign.title)}</strong><span>by ${escapeHtml(campaign.author)} · v${escapeHtml(campaign.version)} · ${formatBytes(campaign.package.size)}</span></div>
-            <button class="primary compact" data-action="install" data-campaign="${escapeHtml(campaign.id)}" ${!gameDir || busy ? "disabled" : ""}>Install</button>
-          </article>
-        `).join("") : '<p class="no-options">No packages for this campaign in the current catalog.</p>'}
-      </section>
-      ${managedHere ? '<p class="managed-note">CCM Reborn has a restorable snapshot for this active change.</p>' : ""}
-    </article>`;
-}
-
 function bindEvents() {
   document.querySelectorAll<HTMLButtonElement>("[data-page]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -177,7 +132,7 @@ function bindEvents() {
   });
   document.querySelector<HTMLButtonElement>("[data-action='save-settings']")?.addEventListener("click", (event) => {
     event.preventDefault();
-    catalogSource = document.querySelector<HTMLInputElement>("#catalog-source")?.value.trim() ?? "";
+    catalogSource = document.querySelector<HTMLInputElement>("#catalog-source")?.value.trim() || defaultCatalog;
     profileDir = document.querySelector<HTMLSelectElement>("#profile-directory")?.value.trim() ?? profileDir;
     localStorage.setItem("ccm-catalog-source", catalogSource);
     if (profileDir) localStorage.setItem("ccm-profile-directory", profileDir);
@@ -186,6 +141,9 @@ function bindEvents() {
     void loadCatalog();
   });
   document.querySelector<HTMLButtonElement>("[data-action='choose-directory']")?.addEventListener("click", () => void chooseGameDirectory());
+  document.querySelector<HTMLButtonElement>("[data-action='refresh-catalog']")?.addEventListener("click", () => void loadCatalog());
+  document.querySelector<HTMLButtonElement>("[data-action='use-cloud-catalog']")?.addEventListener("click", () => useCatalogSource(communityCatalog));
+  document.querySelector<HTMLButtonElement>("[data-action='use-local-catalog']")?.addEventListener("click", () => useCatalogSource(localDevCatalog));
   document.querySelector<HTMLButtonElement>("[data-action='detect-directory']")?.addEventListener("click", () => void detectGameDirectory());
   document.querySelector<HTMLButtonElement>("[data-action='choose-profile']")?.addEventListener("click", () => void chooseProfileDirectory());
   document.querySelector<HTMLButtonElement>("[data-action='detect-profiles']")?.addEventListener("click", () => void refreshProfiles(true));
@@ -203,6 +161,16 @@ function bindEvents() {
   document.querySelectorAll<HTMLButtonElement>("[data-action='restore']").forEach((button) => {
     button.addEventListener("click", () => void restoreOriginals(button.dataset.target ?? ""));
   });
+  document.querySelectorAll<HTMLButtonElement>("[data-action='migrate-legacy']").forEach((button) => {
+    button.addEventListener("click", () => void migrateLegacySnapshot(button.dataset.campaign ?? ""));
+  });
+}
+
+function useCatalogSource(source: string) {
+  catalogSource = source;
+  localStorage.setItem("ccm-catalog-source", catalogSource);
+  document.querySelector<HTMLDialogElement>("#settings-dialog")?.close();
+  void loadCatalog();
 }
 
 async function resolveGameDirectory(path: string) {
@@ -312,8 +280,10 @@ async function loadCatalog() {
   try {
     catalog = await invoke<Catalog>("load_catalog", { source: catalogSource });
     selectedId ||= catalog.campaigns[0]?.id ?? "";
-    message = `${catalog.campaigns.length} packages loaded. Select a campaign branch to install a replacement.`;
-    messageKind = "success";
+    message = catalog.sourceKind === "cached"
+      ? `Network unavailable — showing ${catalog.campaigns.length} campaigns from the last verified cloud catalog.`
+      : `${catalog.campaigns.length} packages loaded. Select a campaign branch to install a replacement.`;
+    messageKind = catalog.sourceKind === "cached" ? "neutral" : "success";
     await inspectDirectory();
   } catch (error) {
     catalog = null;
@@ -421,6 +391,29 @@ async function restoreOriginals(targetPath: string) {
       message = result.restoredFiles ? `Original campaign files restored (${result.restoredFiles}).` : "Original campaigns are already active.";
       messageKind = "success";
     }
+    await inspectDirectory();
+  } catch (error) {
+    message = String(error);
+    messageKind = "error";
+  } finally {
+    busy = false;
+    render();
+  }
+}
+
+async function migrateLegacySnapshot(campaignId: string) {
+  busy = true;
+  message = "Migrating legacy CCM saves to the selected account…";
+  messageKind = "neutral";
+  render();
+  try {
+    const result = await migrateLegacyProfile(campaignId, profileDir);
+    if (!result) {
+      message = "";
+      return;
+    }
+    message = `Migrated ${result.filesCopied} legacy profile files for ${result.campaignId}.`;
+    messageKind = "success";
     await inspectDirectory();
   } catch (error) {
     message = String(error);

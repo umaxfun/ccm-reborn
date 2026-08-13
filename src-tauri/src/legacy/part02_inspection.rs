@@ -83,26 +83,21 @@ fn inspect_saved_campaign_resumes_blocking(
     game_dir: Option<String>,
     profile_dir: Option<String>,
 ) -> Result<Vec<SavedCampaignResume>, String> {
-    let root = match select_starcraft_profile(profile_dir.as_deref())? {
-        Some(profile) => profile_store_base_for(&profile.path)?,
+    let profile = match select_starcraft_profile(profile_dir.as_deref())? {
+        Some(profile) => profile,
         None => return Ok(Vec::new()),
     };
+    let root = profile_store_base_for(&profile.path)?;
     let mut resumes = inspect_saved_campaign_resumes_at(&root)?;
+    // CCM's first profile format was not namespaced to an SC2 account. It is
+    // never used for a switch now, but a valid manifest still proves that the
+    // player used a campaign. Surface it as explicitly legacy read-only
+    // history instead of incorrectly claiming that the campaign was never
+    // played.
+    merge_unattached_legacy_resumes(&mut resumes, inspect_legacy_saved_campaign_resumes_at(&profile_store_base()?)?, &root)?;
     if let Some(game_dir) = game_dir.as_deref().map(str::trim).filter(|path| !path.is_empty()) {
         for live_resume in inspect_live_active_campaign_resumes(&PathBuf::from(game_dir), profile_dir.as_deref())? {
-            if let Some(stored) = resumes.iter_mut().find(|stored| stored.campaign_id == live_resume.campaign_id) {
-                let should_replace = live_resume
-                    .latest_save
-                    .as_ref()
-                    .map(|save| save.modified_at)
-                    .unwrap_or_default()
-                    > stored.latest_save.as_ref().map(|save| save.modified_at).unwrap_or_default();
-                if should_replace || stored.latest_save.is_none() {
-                    *stored = live_resume;
-                }
-            } else {
-                resumes.push(live_resume);
-            }
+            merge_saved_campaign_resume(&mut resumes, live_resume);
         }
     }
     sort_saved_campaign_resumes(&mut resumes);
@@ -139,8 +134,10 @@ fn inspect_saved_campaign_resumes_at(root: &Path) -> Result<Vec<SavedCampaignRes
         });
         let manifest_path = store.join("ccm-resume.json");
         let manifest = read_campaign_profile_resume_manifest(&manifest_path, &campaign_id).ok();
+        let legacy_migrated = manifest.as_ref().is_some_and(|manifest| manifest.legacy_migrated);
+        let captured_at = manifest.as_ref().map(|manifest| manifest.captured_at);
         let mut unverified_save_count = 0usize;
-        let latest_save = if let Some(manifest) = manifest.filter(|manifest| !manifest.dependency_names.is_empty()) {
+        let latest_save = if let Some(manifest) = manifest.as_ref().filter(|manifest| !manifest.dependency_names.is_empty()) {
             saves.iter().find_map(|path| {
                 let details = inspect_save_details(path).ok()?;
                 if !save_details_match_dependencies(&details, &manifest.dependency_names) {
@@ -162,11 +159,15 @@ fn inspect_saved_campaign_resumes_at(root: &Path) -> Result<Vec<SavedCampaignRes
             unverified_save_count = saves.len();
         }
         if !saves.is_empty() || manifest_path.is_file() {
+            let last_played_at = if legacy_migrated { captured_at } else { latest_save.as_ref().map(|save| save.modified_at) };
             resumes.push(SavedCampaignResume {
                 campaign_id,
                 save_count: saves.len(),
                 latest_save,
                 unverified_save_count,
+                last_played_at,
+                last_played_source: last_played_at.map(|_| if legacy_migrated { "legacy-ccm-snapshot".into() } else { "verified-save".into() }),
+                legacy_migration_pending: false,
             });
         }
     }
@@ -174,13 +175,61 @@ fn inspect_saved_campaign_resumes_at(root: &Path) -> Result<Vec<SavedCampaignRes
     Ok(resumes)
 }
 
+fn inspect_legacy_saved_campaign_resumes_at(root: &Path) -> Result<Vec<SavedCampaignResume>, String> {
+    let mut legacy = Vec::new();
+    for mut resume in inspect_saved_campaign_resumes_at(root)? {
+        let manifest_path = root.join(&resume.campaign_id).join("ccm-resume.json");
+        let Ok(manifest) = read_campaign_profile_resume_manifest(&manifest_path, &resume.campaign_id) else {
+            continue;
+        };
+        // The old copy path did not preserve a save file's modified time.
+        // `captured_at` is therefore an honest, useful fallback: the moment
+        // CCM last archived this confirmed campaign profile.
+        resume.last_played_at = Some(manifest.captured_at);
+        resume.last_played_source = Some("legacy-ccm-snapshot".into());
+        resume.legacy_migration_pending = true;
+        legacy.push(resume);
+    }
+    Ok(legacy)
+}
+
+fn merge_unattached_legacy_resumes(
+    resumes: &mut Vec<SavedCampaignResume>,
+    legacy_resumes: Vec<SavedCampaignResume>,
+    account_store: &Path,
+) -> Result<(), String> {
+    for legacy_resume in legacy_resumes {
+        let target = account_store.join(&legacy_resume.campaign_id);
+        match fs::symlink_metadata(&target) {
+            Ok(_) => continue,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error) => return Err(io_error(error)),
+        }
+        merge_saved_campaign_resume(resumes, legacy_resume);
+    }
+    Ok(())
+}
+
+fn merge_saved_campaign_resume(resumes: &mut Vec<SavedCampaignResume>, candidate: SavedCampaignResume) {
+    let Some(index) = resumes.iter().position(|resume| resume.campaign_id == candidate.campaign_id) else {
+        resumes.push(candidate);
+        return;
+    };
+    let existing = &resumes[index];
+    let candidate_time = candidate.last_played_at.unwrap_or_default();
+    let existing_time = existing.last_played_at.unwrap_or_default();
+    let candidate_is_verified = candidate.last_played_source.as_deref() == Some("verified-save");
+    let existing_is_verified = existing.last_played_source.as_deref() == Some("verified-save");
+    if candidate_time > existing_time || (candidate_time == existing_time && candidate_is_verified && !existing_is_verified) {
+        resumes[index] = candidate;
+    }
+}
+
 fn sort_saved_campaign_resumes(resumes: &mut [SavedCampaignResume]) {
     resumes.sort_by(|left, right| {
         right
-            .latest_save
-            .as_ref()
-            .map(|save| save.modified_at)
-            .cmp(&left.latest_save.as_ref().map(|save| save.modified_at))
+            .last_played_at
+            .cmp(&left.last_played_at)
             .then_with(|| left.campaign_id.cmp(&right.campaign_id))
     });
 }
@@ -225,8 +274,11 @@ fn inspect_live_active_campaign_resumes(
         resumes.push(SavedCampaignResume {
             campaign_id: state.campaign_id,
             save_count,
+            last_played_at: latest_save.as_ref().map(|save| save.modified_at),
+            last_played_source: latest_save.as_ref().map(|_| "verified-save".into()),
             latest_save,
             unverified_save_count: 0,
+            legacy_migration_pending: false,
         });
     }
     Ok(resumes)

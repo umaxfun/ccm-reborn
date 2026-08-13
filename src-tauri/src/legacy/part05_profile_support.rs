@@ -231,13 +231,20 @@ fn validate_profile_store_chain(base: &Path, suffix: &[&str]) -> Result<(), Stri
 /// Older builds stored snapshots only by campaign ID.  That is ambiguous once
 /// two Battle.net account profiles use the app, so never silently import it
 /// into whichever profile happens to be selected today.
-fn reject_ambiguous_legacy_profile_store(campaign_id: &str) -> Result<(), String> {
+fn reject_ambiguous_legacy_profile_store(campaign_id: &str, account_store: &Path) -> Result<(), String> {
     if campaign_id.is_empty() {
         return Ok(());
     }
     validate_campaign_id(campaign_id)?;
     let legacy = profile_store_base()?.join(campaign_id);
     if legacy.exists() {
+        let imported = profile_store_root(account_store, campaign_id);
+        if imported.is_dir()
+            && !fs::symlink_metadata(&imported).map_err(io_error)?.file_type().is_symlink()
+            && read_campaign_profile_resume_manifest(&imported.join("ccm-resume.json"), campaign_id).is_ok()
+        {
+            return Ok(());
+        }
         return Err(format!(
             "Legacy CCM profile snapshot {} is not tied to an SC2 account. It was left untouched; migrate or remove it explicitly before switching this campaign.",
             legacy.display()
