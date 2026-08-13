@@ -28,7 +28,7 @@ let inspection: Inspection | null = null;
 let savedResumes: SavedCampaignResume[] = [];
 let page: "dashboard" | "library" = "dashboard";
 let selectedId = "";
-let message = "Preparing campaign control…";
+let message = "Getting your campaigns ready…";
 let messageKind: "neutral" | "success" | "error" = "neutral";
 let busy = false;
 let launchMessageTimer: number | undefined;
@@ -39,14 +39,6 @@ const escapeHtml = (value: string) => value.replace(/[&<>'"]/g, (character) =>
 );
 
 function render() {
-  const catalogLabel = catalog
-    ? `${escapeHtml(catalog.name)} · ${catalog.sourceKind === "local" ? "local catalog" : catalog.sourceKind === "cached" ? "offline cloud cache" : "community cloud"}`
-    : "Catalog unavailable";
-  const locationLabel = gameDir ? escapeHtml(gameDir) : "Searching automatically…";
-  const activeProfileLabel = profileDir
-    ? `Profile ${escapeHtml(profileName(profileDir))} · this account's saves and campaign progress are in use`
-    : "No account profile selected — installs are preview-only";
-
   root.innerHTML = `
     <aside class="sidebar">
       <div class="brand"><span class="brand-mark">C</span><span>CCM <b>REBORN</b></span></div>
@@ -63,9 +55,9 @@ function render() {
     </aside>
     <main>
       <header>
-        <div><p class="eyebrow">${catalogLabel}</p><h1>${page === "dashboard" ? "Your campaigns" : "Campaign library"}</h1><p class="subhead">${page === "dashboard" ? `${locationLabel}<br /><span class="profile-context">${activeProfileLabel}</span>` : "Browse every package in the current catalog."}</p></div>
+        <div><h1>${page === "dashboard" ? "Campaigns" : "Library"}</h1></div>
         <div class="header-actions">
-          <button class="ghost compact" data-action="refresh-catalog" ${busy || !catalogSource ? "disabled" : ""}>Refresh</button><button class="settings-button" data-action="show-settings">Sources</button>
+          <button class="ghost compact" data-action="refresh-catalog" ${busy || !catalogSource ? "disabled" : ""}>Check for updates</button><button class="settings-button" data-action="show-settings">Sources</button>
         </div>
       </header>
       ${message ? `<section class="status ${messageKind}"><span>${messageKind === "success" ? "✓" : messageKind === "error" ? "!" : "i"}</span><p>${escapeHtml(message)}</p></section>` : ""}
@@ -202,7 +194,7 @@ async function chooseProfileDirectory() {
   if (!profileCandidates.some((profile) => profile.path === profileDir)) {
     profileCandidates = [...profileCandidates, { path: profileDir, label: profileDir }];
   }
-  message = `StarCraft II profile selected: ${profileDir}`;
+  message = "StarCraft II account selected.";
   messageKind = "success";
   render();
 }
@@ -274,15 +266,15 @@ async function loadCatalog() {
     return;
   }
   busy = true;
-  message = "Loading catalog…";
+  message = "Loading campaigns…";
   messageKind = "neutral";
   render();
   try {
     catalog = await invoke<Catalog>("load_catalog", { source: catalogSource });
     selectedId ||= catalog.campaigns[0]?.id ?? "";
     message = catalog.sourceKind === "cached"
-      ? `Network unavailable — showing ${catalog.campaigns.length} campaigns from the last verified cloud catalog.`
-      : `${catalog.campaigns.length} packages loaded. Select a campaign branch to install a replacement.`;
+      ? "Offline — showing the last available campaign list."
+      : "";
     messageKind = catalog.sourceKind === "cached" ? "neutral" : "success";
     await inspectDirectory();
   } catch (error) {

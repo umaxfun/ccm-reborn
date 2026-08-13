@@ -159,9 +159,6 @@ fn install_campaign_blocking(request: InstallRequest) -> Result<InstallResult, S
     if looks_like_starcraft(&root) && request.profile_dir.as_deref().map(str::trim).filter(|path| !path.is_empty()).is_none() {
         return Err("Choose the exact StarCraft II account profile with --profile-dir before applying a live install.".into());
     }
-    if looks_like_starcraft(&root) && starcraft_is_running() {
-        return Err("StarCraft II is running. Close it completely before applying a campaign install.".into());
-    }
     let _operation_lock = acquire_operation_lock(&root)?;
     recover_interrupted_install(&root)?;
 
@@ -195,9 +192,6 @@ fn restore_original_campaigns_blocking(game_dir: String, profile_dir: Option<Str
     }
     if looks_like_starcraft(&root) && profile_dir.as_deref().map(str::trim).filter(|path| !path.is_empty()).is_none() {
         return Err("Choose the exact StarCraft II account profile with --profile-dir before restoring a live campaign.".into());
-    }
-    if looks_like_starcraft(&root) && starcraft_is_running() {
-        return Err("StarCraft II is running. Close it completely before restoring original campaigns.".into());
     }
     let _operation_lock = acquire_operation_lock(&root)?;
     recover_interrupted_install(&root)?;

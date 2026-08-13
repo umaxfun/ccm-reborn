@@ -1,6 +1,6 @@
 import type { Campaign, Catalog, Inspection, SavedCampaignResume } from "./types";
 import { campaignSlot, coverClass, formatBytes } from "./domain";
-import { resumeFor, resumeInstruction, resumeSummary, sortCampaignsByRecentPlay } from "./resume";
+import { resumeCheckpoint, resumeFor, resumeInstruction, resumeSummary, sortCampaignsByRecentPlay } from "./resume";
 
 const slots = [
   { id: "wings-of-liberty", title: "Wings of Liberty", short: "WOL", colour: "ember" },
@@ -37,9 +37,8 @@ function renderSlot(slot: typeof slots[number], context: DashboardContext) {
     campaignSlot(campaign.requirements.campaign) === slot.id && context.isCurrentCatalogCampaign(campaign)
   );
   const currentTitle = current?.title ?? "StarCraft II directory not selected";
-  const currentMeta = current ? `${current.author} · ${current.version}` : "Detect the game directory to inspect its active campaign.";
+  const currentMeta = current ? `Version ${current.version}` : "Choose the StarCraft II folder to see what is installed.";
   const managed = context.inspection?.managedCampaigns.find((campaign) => campaign.slot === slot.id);
-  const managedHere = Boolean(managed && context.catalog?.campaigns.some((campaign) => campaign.id === managed.id));
   const activeResume = managed ? resumeFor(context.savedResumes, managed.id) : null;
 
   return `
@@ -47,11 +46,11 @@ function renderSlot(slot: typeof slots[number], context: DashboardContext) {
       <header class="slot-header">
         <div class="slot-sigil">${slot.short.slice(0, 1)}</div>
         <div><p class="eyebrow">${slot.short}</p><h2>${slot.title}</h2></div>
-        <span class="slot-state ${current?.isModified ? "custom" : "original"}">${current?.isModified ? "CUSTOM" : "ORIGINAL / UNKNOWN"}</span>
+        <span class="slot-state ${current?.isModified ? "custom" : "original"}">${current?.isModified ? "Custom" : current ? "Original" : "Not detected"}</span>
       </header>
       <section class="current-install">
-        <div><small>CURRENTLY INSTALLED</small><strong>${escapeHtml(currentTitle)}</strong><span>${escapeHtml(currentMeta)}</span>${managed ? `<p class="resume-instruction"><small>${activeResume?.latestSave ? "CCM RESUME — DO NOT USE CLOUD CONTINUE" : "CCM START NEW CAMPAIGN"}</small>${escapeHtml(resumeInstruction(activeResume))}</p>` : ""}</div>
-        <div class="current-slot-actions"><button class="ghost play" data-action="play" ${!context.inspection?.canLaunch || context.busy ? "disabled" : ""}>Play current</button>${currentPackage ? `<button class="ghost repair" data-action="install" data-campaign="${escapeHtml(currentPackage.id)}" ${!context.gameDir || context.busy ? "disabled" : ""}>Repair</button>` : ""}${managed ? `<button class="ghost repair" data-action="restore" data-target="${escapeHtml(managed.targetPath)}" ${!context.gameDir || context.busy || !context.profileDir ? "disabled" : ""}>Restore original</button>` : ""}</div>
+        <div class="current-campaign-copy"><small>PLAYING NOW</small><strong>${escapeHtml(currentTitle)}</strong><span>${escapeHtml(currentMeta)}</span>${managed ? `<div class="resume-instruction"><strong>${activeResume?.latestSave ? `Continue from ${escapeHtml(resumeCheckpoint(activeResume) ?? "your last save")}` : "Ready to start"}</strong><span>${escapeHtml(resumeInstruction(activeResume))}</span></div>` : ""}</div>
+        <div class="current-slot-actions"><button class="primary compact play" data-action="play" ${!context.inspection?.canLaunch || context.busy ? "disabled" : ""}>Play</button>${currentPackage || managed ? `<details class="campaign-options"><summary>More</summary><div>${currentPackage ? `<button class="ghost repair" data-action="install" data-campaign="${escapeHtml(currentPackage.id)}" ${!context.gameDir || context.busy ? "disabled" : ""}>Repair files</button>` : ""}${managed ? `<button class="ghost repair" data-action="restore" data-target="${escapeHtml(managed.targetPath)}" ${!context.gameDir || context.busy || !context.profileDir ? "disabled" : ""}>Restore original</button>` : ""}</div></details>` : ""}</div>
       </section>
       <section class="alternatives">
         <div class="alternative-heading"><small>INSTALL SOMETHING ELSE</small><span>${options.length} available</span></div>
@@ -63,6 +62,5 @@ function renderSlot(slot: typeof slots[number], context: DashboardContext) {
           </article>
         `).join("") : '<p class="no-options">No packages for this campaign in the current catalog.</p>'}
       </section>
-      ${managedHere ? '<p class="managed-note">CCM Reborn has a restorable snapshot for this active change.</p>' : ""}
     </article>`;
 }

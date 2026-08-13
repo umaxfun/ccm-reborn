@@ -279,29 +279,6 @@ fn launch_starcraft(root: &Path) -> Result<(), String> {
         .map_err(|error| format!("Could not launch StarCraft II: {error}"))
 }
 
-fn starcraft_is_running() -> bool {
-    #[cfg(target_os = "windows")]
-    {
-        let output = Command::new("tasklist").args(["/FI", "IMAGENAME eq SC2_x64.exe"]).output();
-        return output
-            .ok()
-            .filter(|output| output.status.success())
-            .and_then(|output| String::from_utf8(output.stdout).ok())
-            .is_some_and(|text| text.to_ascii_lowercase().contains("sc2_x64.exe"));
-    }
-    #[cfg(not(target_os = "windows"))]
-    {
-        ["StarCraft II", "SC2_x64", "SC2Switcher"]
-            .into_iter()
-            .any(|pattern| Command::new("pgrep")
-                .args(["-f", pattern])
-                .stdout(std::process::Stdio::null())
-                .stderr(std::process::Stdio::null())
-                .status()
-                .is_ok_and(|status| status.success()))
-    }
-}
-
 #[cfg(any(target_os = "windows", target_os = "linux"))]
 fn starcraft_executable(root: &Path) -> Option<PathBuf> {
     ["SC2_x64.exe", "SC2Switcher_x64.exe", "SC2_x64"]
