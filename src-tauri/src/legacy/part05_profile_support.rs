@@ -393,8 +393,8 @@ fn write_text_atomic(path: &Path, text: &str) -> Result<(), String> {
         fs::create_dir_all(parent).map_err(io_error)?;
     }
     let temporary = path.with_extension(format!("{}.tmp", Uuid::new_v4()));
-    fs::write(&temporary, text).map_err(io_error)?;
-    let file = File::open(&temporary).map_err(io_error)?;
+    let mut file = File::create(&temporary).map_err(io_error)?;
+    file.write_all(text.as_bytes()).map_err(io_error)?;
     file.sync_all().map_err(io_error)?;
     drop(file);
     atomic_replace(&temporary, path)
