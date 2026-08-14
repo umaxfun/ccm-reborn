@@ -7,6 +7,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const targetDirectory = resolve(root, "src-tauri", "target");
 const tauriCli = resolve(root, "node_modules", "@tauri-apps", "cli", "tauri.js");
 const windowsTarget = "x86_64-pc-windows-msvc";
+const macTargets = ["aarch64-apple-darwin", "x86_64-apple-darwin"];
+const universalMacTarget = "universal-apple-darwin";
 const platform = process.platform;
 const command = process.argv[2];
 
@@ -62,8 +64,29 @@ function buildUniversalMac() {
   if (platform !== "darwin") {
     fail("macOS bundles must be built on macOS. Run this command on a Mac or use a macOS CI runner.");
   }
-  run("rustup", ["target", "add", "aarch64-apple-darwin", "x86_64-apple-darwin"]);
-  tauri(["--target", "universal-apple-darwin", "--bundles", "app,dmg"]);
+  run("rustup", ["target", "add", ...macTargets]);
+
+  // Tauri discovers every `src/bin/*` binary and includes it in the macOS
+  // bundle. Its universal build creates the app binary, but does not merge
+  // those additional binaries, so build CCM's CLI explicitly first.
+  for (const target of macTargets) {
+    run("cargo", [
+      "build",
+      "--manifest-path", "src-tauri/Cargo.toml",
+      "--release",
+      "--target", target,
+      "--bin", "ccm",
+    ]);
+  }
+  const universalCli = resolve(targetDirectory, universalMacTarget, "release", "ccm");
+  mkdirSync(dirname(universalCli), { recursive: true });
+  run("lipo", [
+    "-create",
+    ...macTargets.map((target) => resolve(targetDirectory, target, "release", "ccm")),
+    "-output", universalCli,
+  ]);
+
+  tauri(["--target", universalMacTarget, "--bundles", "app,dmg"]);
 }
 
 function buildWindows() {
