@@ -4,7 +4,7 @@
 //! and `install` delegate to the same backend paths as the Tauri commands;
 //! `summary`/`inspect` inventory only an explicitly supplied directory.
 
-use ccm_reborn_lib::{cli_fixture_summary_json, cli_install_json, cli_installed_manifest_json, cli_plan_json, cli_restore_json};
+use ccm_reborn_lib::{atomic_replace, cli_fixture_summary_json, cli_install_json, cli_installed_manifest_json, cli_plan_json, cli_restore_json};
 use ccm_reborn_lib::profile_core::{
     compare_snapshot, sort_progress_summaries, CampaignProgressSummary, FileDigest, ProfileIdentity,
     read_manifest,
@@ -227,7 +227,7 @@ fn write_atomic(path: &Path, bytes: &[u8]) -> Result<(), String> {
     let mut file = File::create(&temporary).map_err(io_error)?;
     file.write_all(bytes).map_err(io_error)?;
     file.sync_all().map_err(io_error)?;
-    fs::rename(&temporary, path).map_err(io_error)
+    atomic_replace(&temporary, path)
 }
 
 fn io_error(error: std::io::Error) -> String {

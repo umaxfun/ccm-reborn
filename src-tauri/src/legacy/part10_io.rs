@@ -313,12 +313,12 @@ fn write_json_atomic<T: Serialize>(path: &Path, value: &T) -> Result<(), String>
 }
 
 #[cfg(not(windows))]
-pub(crate) fn atomic_replace(temporary: &Path, destination: &Path) -> Result<(), String> {
+pub fn atomic_replace(temporary: &Path, destination: &Path) -> Result<(), String> {
     fs::rename(temporary, destination).map_err(io_error)
 }
 
 #[cfg(windows)]
-pub(crate) fn atomic_replace(temporary: &Path, destination: &Path) -> Result<(), String> {
+pub fn atomic_replace(temporary: &Path, destination: &Path) -> Result<(), String> {
     use std::iter;
     use std::os::windows::ffi::OsStrExt;
     use windows_sys::Win32::Storage::FileSystem::{MoveFileExW, MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH};

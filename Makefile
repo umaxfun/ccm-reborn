@@ -1,22 +1,16 @@
 SHELL := /bin/sh
 
-WINDOWS_TARGET ?= x86_64-pc-windows-msvc
-LLVM_PREFIX := $(shell brew --prefix llvm 2>/dev/null)
-
-ifneq ($(strip $(LLVM_PREFIX)),)
-export PATH := $(LLVM_PREFIX)/bin:$(PATH)
-endif
-
 .DEFAULT_GOAL := help
-.PHONY: help check source-size test cli mac mac-universal setup-win win all
+.PHONY: help check source-size test cli mac mac-universal setup-win win linux all
 
 help:
 	@printf '%s\n' \
-	  'make mac           Build a native macOS .app for this Mac.' \
+	  'make mac           Build native macOS .app and .dmg artifacts.' \
 	  'make mac-universal Build one .app for Apple Silicon and Intel Macs.' \
 	  'make setup-win     Install the Windows cross-build prerequisites on macOS.' \
 	  'make win           Build a 64-bit Windows NSIS setup .exe from macOS.' \
-	  'make all           Build macOS and Windows artifacts.' \
+	  'make linux         Build Linux .deb and AppImage artifacts through Docker.' \
+	  'make all           Build macOS, Windows, and Linux artifacts.' \
 	  'make test          Run frontend and Rust tests.' \
 	  'make check         Run source-size checks, frontend and Rust tests.' \
 	  'make cli           Build and show the core CLI help.'
@@ -34,8 +28,7 @@ cli:
 	cargo run --manifest-path src-tauri/Cargo.toml --bin ccm -- help
 
 mac:
-	npm run tauri build -- --bundles app
-	@printf '%s\n' 'macOS app: src-tauri/target/release/bundle/macos/CCM Reborn.app'
+	npm run tauri:mac
 
 mac-universal:
 	rustup target add aarch64-apple-darwin x86_64-apple-darwin
@@ -43,14 +36,13 @@ mac-universal:
 	@printf '%s\n' 'Universal macOS app: src-tauri/target/universal-apple-darwin/release/bundle/macos/CCM Reborn.app'
 
 setup-win:
-	@command -v brew >/dev/null 2>&1 || { echo 'Homebrew is required for LLVM: https://brew.sh'; exit 1; }
-	@command -v llvm-rc >/dev/null 2>&1 || { echo 'Installing LLVM (provides llvm-rc)…'; brew install llvm; }
-	rustup target add $(WINDOWS_TARGET)
-	cargo install --locked cargo-xwin
-	@PATH="$$(brew --prefix llvm)/bin:$$PATH"; export PATH; command -v llvm-rc >/dev/null 2>&1 || { echo 'llvm-rc is not available after installing LLVM.'; exit 1; }
+	node scripts/release.mjs setup-win
 
-win: setup-win
-	PATH="$$(brew --prefix llvm)/bin:$$PATH" npm run tauri build -- --runner cargo-xwin --target $(WINDOWS_TARGET) --bundles nsis
-	@printf '%s\n' 'Windows installer: src-tauri/target/$(WINDOWS_TARGET)/release/bundle/nsis/'
+win:
+	npm run tauri:win
 
-all: mac win
+linux:
+	npm run tauri:linux
+
+all:
+	npm run tauri:all

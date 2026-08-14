@@ -8,6 +8,11 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "tauri": "node scripts/tauri.mjs",
+    "tauri:mac": "node scripts/release.mjs mac",
+    "tauri:win": "node scripts/release.mjs win",
+    "tauri:linux": "node scripts/release.mjs linux",
+    "tauri:all": "node scripts/release.mjs all",
+    "version:bump": "node scripts/bump-version.mjs",
     "catalog:publish-initial": "node scripts/publish-initial-catalog.mjs",
     "catalog:publish": "bash scripts/publish-campaign.sh",
     "catalog:smoke": "node scripts/check-cloud-catalog.mjs"

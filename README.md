@@ -77,7 +77,7 @@ live game, `install` and `restore` also require the exact `--profile-dir`.
 `restore` always requires one explicit campaign `--target`; it never guesses
 which of the four campaign slots you meant.
 
-Choose the directory that contains SC2's `Maps` directory (on Windows, normally the directory containing `SC2_x64.exe`) in **Configure sources**. Use a disposable SC2 install for development.
+Choose the directory that contains SC2's `Maps` directory (on Windows, it normally also contains `SC2Data` and `Support64`) in **Configure sources**. Use a disposable SC2 install for development.
 
 Each catalog entry requires metadata for display and a verified package:
 
@@ -155,12 +155,36 @@ npm run tauri build -- --debug --bundles app
 
 ## Release builds
 
-From macOS, use the included Makefile:
+`npm run tauri build` remains the native Tauri command: it builds for the current
+platform and all of its configured bundle formats. Release shortcuts are also
+available:
 
 ```sh
-make mac            # native .app for the current Mac
-make mac-universal  # one .app for Apple Silicon and Intel Macs
-make win            # x64 Windows NSIS setup.exe, cross-compiled on macOS
+npm run tauri:mac    # macOS .app and .dmg (macOS host)
+npm run tauri:win    # x64 Windows NSIS setup.exe (Windows or macOS host)
+npm run tauri:linux  # x64 .deb and AppImage (Linux or macOS with Docker)
+npm run tauri:all    # all of the above from macOS
 ```
 
-`make win` installs the Windows Rust target, `cargo-xwin`, and Homebrew LLVM on first use. It produces an NSIS installer in `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/`. A Windows `.msi` must still be built on Windows; the macOS target intentionally emits the portable NSIS setup `.exe` instead.
+On macOS, `tauri:win` installs the Windows Rust target, `cargo-xwin`, Homebrew
+LLVM, and NSIS on first use. Linux artifacts are built in an `linux/amd64`
+Docker image and copied into `src-tauri/target/release/bundle/`. `tauri:all`
+must run on macOS because macOS bundles require a Mac build host.
+
+The existing Makefile mirrors these commands; `make mac-universal` still builds
+one `.app` for Apple Silicon and Intel Macs.
+
+## Version bump
+
+Use the version script before a release to update the application version in the
+Node, Rust, lockfile, and Tauri manifests together:
+
+```sh
+npm run version:bump          # 0.1.0 → 0.1.1 (patch by default)
+npm run version:bump -- patch  # 0.1.0 → 0.1.1
+npm run version:bump -- minor  # 0.1.0 → 0.2.0
+npm run version:bump -- 1.0.0  # set an exact semver version
+```
+
+Add `--dry-run` to preview the result. The script refuses to write when those
+manifest versions are already out of sync.

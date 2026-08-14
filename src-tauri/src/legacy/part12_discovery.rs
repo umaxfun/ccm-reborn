@@ -167,6 +167,36 @@ fn standard_game_locations() -> Vec<PathBuf> {
             home.join("Library/Application Support/Blizzard/StarCraft II"),
         ]);
     }
+    #[cfg(target_os = "windows")]
+    locations.extend(windows_game_locations(
+        std::env::var_os("ProgramFiles").map(PathBuf::from),
+        std::env::var_os("ProgramW6432").map(PathBuf::from),
+        std::env::var_os("ProgramFiles(x86)").map(PathBuf::from),
+        std::env::var_os("LOCALAPPDATA").map(PathBuf::from),
+    ));
+    locations
+}
+
+#[allow(dead_code)] // Called only by Windows production code and cross-platform regression tests.
+fn windows_game_locations(
+    program_files: Option<PathBuf>,
+    program_w6432: Option<PathBuf>,
+    program_files_x86: Option<PathBuf>,
+    local_app_data: Option<PathBuf>,
+) -> Vec<PathBuf> {
+    let mut locations = Vec::new();
+    for base in [program_files, program_w6432, program_files_x86].into_iter().flatten() {
+        let location = base.join("StarCraft II");
+        if !locations.contains(&location) {
+            locations.push(location);
+        }
+    }
+    if let Some(local_app_data) = local_app_data {
+        locations.extend([
+            local_app_data.join("Blizzard/StarCraft II"),
+            local_app_data.join("Programs/StarCraft II"),
+        ]);
+    }
     locations
 }
 
@@ -213,9 +243,12 @@ fn has_desktop_starcraft_markers(root: &Path) -> bool {
     root.join("SC2Data").is_dir()
         && (root.join("StarCraft II.app").is_dir()
             || root.join("Support").is_dir()
+            || root.join("Support64").is_dir()
             || root.join("Versions").is_dir()
             || root.join("SC2_x64.exe").is_file()
-            || root.join("SC2Switcher_x64.exe").is_file())
+            || root.join("SC2Switcher_x64.exe").is_file()
+            || root.join("Support64/SC2_x64.exe").is_file()
+            || root.join("Support64/SC2Switcher_x64.exe").is_file())
 }
 
 fn find_version_root(versions: &Path) -> Option<PathBuf> {
@@ -231,6 +264,8 @@ fn is_game_root(path: &Path) -> bool {
     path.join("Maps/Campaign").is_dir()
         || path.join("SC2_x64.exe").is_file()
         || path.join("SC2Switcher_x64.exe").is_file()
+        || path.join("Support64/SC2_x64.exe").is_file()
+        || path.join("Support64/SC2Switcher_x64.exe").is_file()
         || (path.join("Maps").is_dir() && path.join("Mods").is_dir())
 }
 
@@ -279,9 +314,15 @@ fn launch_starcraft(root: &Path) -> Result<(), String> {
         .map_err(|error| format!("Could not launch StarCraft II: {error}"))
 }
 
-#[cfg(any(target_os = "windows", target_os = "linux"))]
+#[allow(dead_code)] // Used only by Windows/Linux production code and cross-platform regression tests.
 fn starcraft_executable(root: &Path) -> Option<PathBuf> {
-    ["SC2_x64.exe", "SC2Switcher_x64.exe", "SC2_x64"]
+    [
+        "Support64/SC2Switcher_x64.exe",
+        "Support64/SC2_x64.exe",
+        "SC2Switcher_x64.exe",
+        "SC2_x64.exe",
+        "SC2_x64",
+    ]
         .into_iter()
         .map(|name| root.join(name))
         .find(|candidate| candidate.is_file())

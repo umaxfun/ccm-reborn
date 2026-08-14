@@ -1,15 +1,19 @@
 import { spawn } from "node:child_process";
 import { createServer } from "node:net";
-import { resolve } from "node:path";
+import { delimiter, resolve } from "node:path";
 
 const args = process.argv.slice(2);
-const tauriBin = resolve("node_modules/.bin/tauri");
+const tauriCli = resolve("node_modules/@tauri-apps/cli/tauri.js");
 // Desktop launchers do not always inherit the interactive shell's Rust PATH.
-// Keep the project runnable from a fresh terminal as well as from Codex.
-const cargoBin = process.env.HOME ? resolve(process.env.HOME, ".cargo/bin") : null;
+// Resolve the JavaScript entry point directly so this also works with Windows'
+// `node_modules/.bin/*.cmd` shims.
+const cargoHome = process.env.CARGO_HOME ?? process.env.HOME ?? process.env.USERPROFILE;
+const cargoBin = cargoHome
+  ? resolve(cargoHome, process.env.CARGO_HOME ? "bin" : ".cargo/bin")
+  : null;
 const childEnv = {
   ...process.env,
-  PATH: [cargoBin, process.env.PATH].filter(Boolean).join(":"),
+  PATH: [cargoBin, process.env.PATH].filter(Boolean).join(delimiter),
 };
 
 function run(command, commandArgs) {
@@ -48,7 +52,7 @@ async function runDev() {
       devUrl: `http://127.0.0.1:${port}`,
     },
   });
-  const tauri = spawn(tauriBin, ["dev", "--config", override, ...args.slice(1)], { stdio: "inherit", env: childEnv });
+  const tauri = spawn(process.execPath, [tauriCli, "dev", "--config", override, ...args.slice(1)], { stdio: "inherit", env: childEnv });
 
   let stopping = false;
   const stop = (code = 0) => {
@@ -80,5 +84,5 @@ if (args[0] === "dev") {
     process.exit(1);
   });
 } else {
-  run(tauriBin, args);
+  run(process.execPath, [tauriCli, ...args]);
 }

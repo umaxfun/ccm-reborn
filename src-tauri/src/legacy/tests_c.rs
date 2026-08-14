@@ -69,3 +69,31 @@ fn legacy_migration_prompt_excludes_campaigns_already_attached_to_this_account()
     assert!(resumes.iter().find(|resume| resume.campaign_id == "needs-migration").unwrap().legacy_migration_pending);
     let _ = fs::remove_dir_all(sandbox);
 }
+
+#[test]
+fn windows_support64_layout_is_detected_and_launchable() {
+    let sandbox = std::env::temp_dir().join(format!("ccm-windows-layout-{}", Uuid::new_v4()));
+    let game = sandbox.join("StarCraft II");
+    fs::create_dir_all(game.join("SC2Data")).unwrap();
+    fs::create_dir_all(game.join("Maps/Campaign")).unwrap();
+    fs::create_dir_all(game.join("Support64")).unwrap();
+    fs::write(game.join("Support64/SC2Switcher_x64.exe"), b"launcher").unwrap();
+
+    assert_eq!(find_game_root(&game), Some(game.clone()));
+    assert!(has_desktop_starcraft_markers(&game));
+    assert_eq!(starcraft_executable(&game), Some(game.join("Support64/SC2Switcher_x64.exe")));
+
+    let locations = windows_game_locations(
+        Some(PathBuf::from("C:/Program Files")),
+        Some(PathBuf::from("C:/Program Files")),
+        Some(PathBuf::from("C:/Program Files (x86)")),
+        Some(PathBuf::from("C:/Users/test/AppData/Local")),
+    );
+    assert!(locations.contains(&PathBuf::from("C:/Program Files/StarCraft II")));
+    assert!(locations.contains(&PathBuf::from("C:/Program Files (x86)/StarCraft II")));
+    assert!(locations.contains(&PathBuf::from("C:/Users/test/AppData/Local/Blizzard/StarCraft II")));
+    let program_files_location = PathBuf::from("C:/Program Files/StarCraft II");
+    assert_eq!(locations.iter().filter(|path| *path == &program_files_location).count(), 1);
+
+    let _ = fs::remove_dir_all(sandbox);
+}
