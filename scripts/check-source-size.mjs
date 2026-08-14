@@ -1,7 +1,8 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = new URL("..", import.meta.url);
+const root = fileURLToPath(new URL("..", import.meta.url));
 const limit = 500;
 const extensions = new Set([".rs", ".ts", ".css", ".mjs"]);
 const ignored = new Set([".git", "node_modules", "target", "dist", "gen"]);
@@ -18,11 +19,11 @@ async function walk(directory) {
   return files;
 }
 
-const files = await walk(root.pathname);
+const files = await walk(root);
 const oversized = [];
 for (const file of files) {
   const lines = (await readFile(file, "utf8")).split("\n").length;
-  if (lines > limit) oversized.push([relative(root.pathname, file), lines]);
+  if (lines > limit) oversized.push([relative(root, file), lines]);
 }
 
 if (oversized.length) {
