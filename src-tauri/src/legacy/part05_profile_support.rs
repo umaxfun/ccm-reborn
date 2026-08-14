@@ -396,6 +396,7 @@ fn write_text_atomic(path: &Path, text: &str) -> Result<(), String> {
     fs::write(&temporary, text).map_err(io_error)?;
     let file = File::open(&temporary).map_err(io_error)?;
     file.sync_all().map_err(io_error)?;
+    drop(file);
     atomic_replace(&temporary, path)
 }
 

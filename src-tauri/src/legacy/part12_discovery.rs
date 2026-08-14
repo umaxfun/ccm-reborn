@@ -359,6 +359,22 @@ struct OperationLock {
     _file: File,
 }
 
+fn operation_lock_is_held(error: &io::Error) -> bool {
+    if error.kind() == io::ErrorKind::WouldBlock {
+        return true;
+    }
+    #[cfg(windows)]
+    {
+        // Windows reports an overlapping byte-range lock as ERROR_LOCK_VIOLATION
+        // (33), which Rust does not classify as WouldBlock.
+        error.raw_os_error() == Some(33)
+    }
+    #[cfg(not(windows))]
+    {
+        false
+    }
+}
+
 fn acquire_operation_lock(root: &Path) -> Result<OperationLock, String> {
     ensure_manager_root(root)?;
     let path = manager_root(root).join("operation.lock");
@@ -369,7 +385,7 @@ fn acquire_operation_lock(root: &Path) -> Result<OperationLock, String> {
         .open(&path)
         .map_err(io_error)?;
     file.try_lock_exclusive().map_err(|error| {
-        if error.kind() == io::ErrorKind::WouldBlock {
+        if operation_lock_is_held(&error) {
             "Another CCM operation is already running for this StarCraft II installation.".into()
         } else {
             io_error(error)

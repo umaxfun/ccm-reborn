@@ -137,8 +137,8 @@ fn plan_campaign_install_blocking(request: InstallRequest) -> Result<DryRunPlan,
                 "remove previous package file before update"
             };
             file_changes.push(FileChangePlan {
-                source: source.display().to_string(),
-                destination: destination.display().to_string(),
+                source: path_string(&source),
+                destination: path_string(&destination),
                 operation: operation.into(),
                 kind: "previous managed install".into(),
                 size,
@@ -157,8 +157,8 @@ fn plan_campaign_install_blocking(request: InstallRequest) -> Result<DryRunPlan,
             .map_err(|_| "Planned file escaped the game directory.")?;
         let metadata = fs::metadata(file).map_err(io_error)?;
         file_changes.push(FileChangePlan {
-            source: file.display().to_string(),
-            destination: backup_root.join(relative).display().to_string(),
+            source: path_string(file),
+            destination: path_string(&backup_root.join(relative)),
             operation: "snapshot before clear/replace".into(),
             kind: if relative.starts_with("Mods") { "existing dependency".into() } else { "existing campaign file".into() },
             size: metadata.len(),
@@ -168,8 +168,8 @@ fn plan_campaign_install_blocking(request: InstallRequest) -> Result<DryRunPlan,
     }
     for file in &package_files {
         file_changes.push(FileChangePlan {
-            source: format!("{} :: {}", archive_path.display(), file.source),
-            destination: root.join(&file.destination).display().to_string(),
+            source: format!("{} :: {}", path_string(&archive_path), file.source),
+            destination: path_string(&root.join(&file.destination)),
             operation: "install package file".into(),
             kind: if file.destination.starts_with("Mods/") { "package dependency".into() } else { "package campaign file".into() },
             size: file.size,

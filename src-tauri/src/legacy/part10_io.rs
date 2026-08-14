@@ -309,6 +309,7 @@ fn write_json_atomic<T: Serialize>(path: &Path, value: &T) -> Result<(), String>
     let mut file = File::create(&temporary).map_err(io_error)?;
     file.write_all(&json).map_err(io_error)?;
     file.sync_all().map_err(io_error)?;
+    drop(file);
     atomic_replace(&temporary, path)
 }
 
