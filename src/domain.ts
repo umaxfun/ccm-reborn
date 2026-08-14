@@ -17,6 +17,7 @@ export const formatBytes = (bytes: number) => bytes < 1024 * 1024
   : `${(bytes / 1024 / 1024).toFixed(bytes > 1024 * 1024 * 1024 ? 1 : 0)} MB`;
 
 export function isCurrentCatalogCampaign(campaign: Campaign, inspection: Inspection | null) {
+  if (inspection?.managedCampaigns.some((item) => item.id === campaign.id)) return true;
   const current = inspection?.activeCampaigns.find((item) => item.slot === campaignSlot(campaign.requirements.campaign));
   return Boolean(current && current.title.trim().toLocaleLowerCase() === campaign.title.trim().toLocaleLowerCase() && current.version.trim() === campaign.version.trim());
 }

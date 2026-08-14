@@ -212,7 +212,6 @@ pub struct GameInspection {
     active_campaign: Option<ActiveCampaign>,
     managed_campaigns: Vec<ActiveCampaign>,
     active_campaigns: Vec<CurrentCampaign>,
-    can_launch: bool,
     recovery_performed: bool,
 }
 
@@ -235,12 +234,6 @@ pub struct CurrentCampaign {
     author: String,
     version: String,
     is_modified: bool,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LaunchResult {
-    message: String,
 }
 
 /// A resumable save stored in CCM's per-campaign local snapshot.  This is

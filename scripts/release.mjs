@@ -11,6 +11,8 @@ const macTargets = ["aarch64-apple-darwin", "x86_64-apple-darwin"];
 const universalMacTarget = "universal-apple-darwin";
 const platform = process.platform;
 const command = process.argv[2];
+const localMakensisDirectory = resolve(root, ".toolcache", "bin");
+const localMakensis = resolve(localMakensisDirectory, "makensis");
 
 function fail(message) {
   console.error(`Release build: ${message}`);
@@ -43,7 +45,13 @@ function ensureMacWindowsPrerequisites() {
     fail("Homebrew is required to cross-build Windows installers: https://brew.sh");
   }
 
-  for (const packageName of ["llvm", "nsis"]) {
+  const llvmPackage = ["llvm", "llvm@20"].find(isBrewPackageInstalled) ?? "llvm";
+  const packageNames = isBrewPackageInstalled(llvmPackage) ? [] : [llvmPackage];
+  if (!existsSync(localMakensis) && !isBrewPackageInstalled("makensis")) {
+    packageNames.push("makensis");
+  }
+
+  for (const packageName of packageNames) {
     if (!isBrewPackageInstalled(packageName)) run("brew", ["install", packageName]);
   }
 
@@ -51,6 +59,8 @@ function ensureMacWindowsPrerequisites() {
   if (spawnSync("cargo", ["xwin", "--version"], { stdio: "ignore" }).status !== 0) {
     run("cargo", ["install", "--locked", "cargo-xwin"]);
   }
+
+  return { llvmPackage };
 }
 
 function buildMac() {
@@ -98,12 +108,16 @@ function buildWindows() {
     fail("Windows installers are built natively on Windows; macOS cross-builds are also supported here.");
   }
 
-  ensureMacWindowsPrerequisites();
-  const llvmPrefix = spawnSync("brew", ["--prefix", "llvm"], { encoding: "utf8" });
+  const { llvmPackage } = ensureMacWindowsPrerequisites();
+  const llvmPrefix = spawnSync("brew", ["--prefix", llvmPackage], { encoding: "utf8" });
   if (llvmPrefix.status !== 0) fail("could not locate Homebrew LLVM after installation.");
   const env = {
     ...process.env,
-    PATH: [resolve(llvmPrefix.stdout.trim(), "bin"), process.env.PATH].filter(Boolean).join(":"),
+    PATH: [
+      existsSync(localMakensis) ? localMakensisDirectory : undefined,
+      resolve(llvmPrefix.stdout.trim(), "bin"),
+      process.env.PATH,
+    ].filter(Boolean).join(":"),
   };
   tauri(["--runner", "cargo-xwin", "--target", windowsTarget, "--bundles", "nsis"], { env });
 }

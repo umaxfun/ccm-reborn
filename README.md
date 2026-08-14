@@ -24,8 +24,9 @@ branch and its progress separate.
 3. Open **Campaigns**, find a campaign in its StarCraft II branch, and choose
    **Install**. CCM Reborn shows a review first; select **Apply installation**
    only after you are happy with the files and save/profile changes.
-4. Press **Play**. When you return, the campaign card tells you which campaign
-   is installed and, when a compatible save is found, where to continue.
+4. Press **Open Battle.net**, then press **Play** in Battle.net to launch
+   StarCraft II. When you return, the campaign card tells you which campaign is
+   installed and, when a compatible save is found, where to continue.
 
 ## What CCM Reborn does for you
 

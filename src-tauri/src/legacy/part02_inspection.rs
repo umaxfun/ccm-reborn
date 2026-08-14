@@ -21,7 +21,6 @@ fn inspect_game_directory_blocking(
             active_campaign: None,
             managed_campaigns: Vec::new(),
             active_campaigns: Vec::new(),
-            can_launch: false,
             recovery_performed: false,
         });
     }
@@ -55,18 +54,15 @@ fn inspect_game_directory_blocking(
         active_campaign,
         managed_campaigns,
         active_campaigns,
-        can_launch: can_launch_starcraft(&root),
         recovery_performed,
     })
 }
 
 #[tauri::command]
-fn launch_current_campaign(game_dir: String) -> Result<LaunchResult, String> {
-    let root = require_desktop_game_root(&game_dir)?;
-    launch_starcraft(&root)?;
-    Ok(LaunchResult {
-        message: "StarCraft II launched. Choose Continue to resume the current campaign.".into(),
-    })
+async fn open_battle_net() -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(open_battle_net_desktop)
+        .await
+        .map_err(|error| format!("Battle.net launcher worker failed: {error}"))?
 }
 
 #[tauri::command]

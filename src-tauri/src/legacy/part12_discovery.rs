@@ -291,55 +291,52 @@ fn game_directory_candidate(path: PathBuf) -> GameDirectoryCandidate {
 }
 
 #[cfg(target_os = "macos")]
-fn can_launch_starcraft(root: &Path) -> bool {
-    root.join("StarCraft II.app").is_dir()
+fn open_battle_net_desktop() -> Result<(), String> {
+    Command::new("open")
+        .args(["-b", "net.battle.app"])
+        .status()
+        .map_err(|_| "Could not open Battle.net. Start it yourself — everything else is ready.".to_string())
+        .and_then(|status| {
+            status.success()
+                .then_some(())
+                .ok_or_else(|| "Could not open Battle.net. Start it yourself — everything else is ready.".to_string())
+        })
 }
 
 #[cfg(target_os = "windows")]
-fn can_launch_starcraft(root: &Path) -> bool {
-    starcraft_executable(root).is_some()
-}
+fn open_battle_net_desktop() -> Result<(), String> {
+    use windows_sys::Win32::UI::Shell::ShellExecuteW;
+    use windows_sys::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
 
-#[cfg(target_os = "linux")]
-fn can_launch_starcraft(root: &Path) -> bool {
-    starcraft_executable(root).is_some()
-}
-
-#[cfg(target_os = "macos")]
-fn launch_starcraft(root: &Path) -> Result<(), String> {
-    let app = root.join("StarCraft II.app");
-    if !app.is_dir() {
-        return Err("Could not find StarCraft II.app in the selected game directory.".into());
+    let operation = "open\0".encode_utf16().collect::<Vec<_>>();
+    let uri = "battlenet://\0".encode_utf16().collect::<Vec<_>>();
+    let result = unsafe {
+        ShellExecuteW(
+            std::ptr::null_mut(),
+            operation.as_ptr(),
+            uri.as_ptr(),
+            std::ptr::null(),
+            std::ptr::null(),
+            SW_SHOWNORMAL,
+        )
+    };
+    if result as isize <= 32 {
+        return Err("Could not open Battle.net. Start it yourself — everything else is ready.".into());
     }
-    Command::new("open")
-        .arg(app)
-        .spawn()
-        .map(|_| ())
-        .map_err(|error| format!("Could not launch StarCraft II: {error}"))
+    Ok(())
 }
 
-#[cfg(any(target_os = "windows", target_os = "linux"))]
-fn launch_starcraft(root: &Path) -> Result<(), String> {
-    let executable = starcraft_executable(root)
-        .ok_or("Could not find the StarCraft II executable in the selected directory.")?;
-    Command::new(executable)
-        .spawn()
-        .map(|_| ())
-        .map_err(|error| format!("Could not launch StarCraft II: {error}"))
-}
-
-#[allow(dead_code)] // Used only by Windows/Linux production code and cross-platform regression tests.
-fn starcraft_executable(root: &Path) -> Option<PathBuf> {
-    [
-        "Support64/SC2Switcher_x64.exe",
-        "Support64/SC2_x64.exe",
-        "SC2Switcher_x64.exe",
-        "SC2_x64.exe",
-        "SC2_x64",
-    ]
-        .into_iter()
-        .map(|name| root.join(name))
-        .find(|candidate| candidate.is_file())
+#[cfg(all(unix, not(target_os = "macos")))]
+fn open_battle_net_desktop() -> Result<(), String> {
+    Command::new("xdg-open")
+        .arg("battlenet://")
+        .status()
+        .map_err(|_| "Could not open Battle.net. Start it yourself — everything else is ready.".to_string())
+        .and_then(|status| {
+            status.success()
+                .then_some(())
+                .ok_or_else(|| "Could not open Battle.net. Start it yourself — everything else is ready.".to_string())
+        })
 }
 
 fn manager_root(root: &Path) -> PathBuf {
@@ -450,7 +447,7 @@ pub fn run() {
             plan_campaign_install,
             install_campaign,
             restore_original_campaigns,
-            launch_current_campaign,
+            open_battle_net,
             inspect_saved_campaign_resumes,
             migrate_legacy_profile,
             resolve_game_directory,

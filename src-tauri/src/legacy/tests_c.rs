@@ -71,7 +71,7 @@ fn legacy_migration_prompt_excludes_campaigns_already_attached_to_this_account()
 }
 
 #[test]
-fn windows_support64_layout_is_detected_and_launchable() {
+fn windows_support64_layout_is_detected() {
     let sandbox = std::env::temp_dir().join(format!("ccm-windows-layout-{}", Uuid::new_v4()));
     let game = sandbox.join("StarCraft II");
     fs::create_dir_all(game.join("SC2Data")).unwrap();
@@ -81,8 +81,6 @@ fn windows_support64_layout_is_detected_and_launchable() {
 
     assert_eq!(find_game_root(&game), Some(game.clone()));
     assert!(has_desktop_starcraft_markers(&game));
-    assert_eq!(starcraft_executable(&game), Some(game.join("Support64/SC2Switcher_x64.exe")));
-
     let locations = windows_game_locations(
         Some(PathBuf::from("C:/Program Files")),
         Some(PathBuf::from("C:/Program Files")),

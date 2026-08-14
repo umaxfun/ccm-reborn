@@ -34,12 +34,13 @@ let selectedId = "";
 let message = "Getting your campaigns ready…";
 let messageKind: "neutral" | "success" | "error" = "neutral";
 let busy = false;
-let launchMessageTimer: number | undefined;
+let battleNetMessageTimer: number | undefined;
 let pendingPlan: DryRunPlan | null = null;
 let installActivity: InstallProgress | null = null;
 let activeInstallCampaignId = "";
 let diagnosticLogPath = "";
 let lastInstallFailure: InstallFailure | null = null;
+let scrollToInstallStatus = false;
 let settingsOpen = false;
 let settingsCatalogSourceDraft = catalogSource;
 let settingsProfileDirDraft = profileDir;
@@ -136,6 +137,15 @@ function render() {
   if (settingsOpen && settingsDialog && !settingsDialog.open) settingsDialog.showModal();
   const planDialog = document.querySelector<HTMLDialogElement>("#plan-dialog");
   if (planDialog && !planDialog.open) planDialog.showModal();
+  if (scrollToInstallStatus) {
+    scrollToInstallStatus = false;
+    window.requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>(".status.installing")?.scrollIntoView({
+        block: "start",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      });
+    });
+  }
 }
 
 function bindEvents() {
@@ -184,7 +194,10 @@ function bindEvents() {
   document.querySelector<HTMLButtonElement>("[data-action='choose-profile']")?.addEventListener("click", () => void chooseProfileDirectory());
   document.querySelector<HTMLButtonElement>("[data-action='detect-profiles']")?.addEventListener("click", () => void refreshProfiles(true));
   document.querySelectorAll<HTMLButtonElement>("[data-action='install']").forEach((button) => {
-    button.addEventListener("click", () => void planCampaignInstall(installFlow, button.dataset.campaign ?? ""));
+    button.addEventListener("click", () => {
+      scrollToInstallStatus = true;
+      void planCampaignInstall(installFlow, button.dataset.campaign ?? "");
+    });
   });
   document.querySelectorAll<HTMLButtonElement>("[data-action='close-plan']").forEach((button) => {
     button.addEventListener("click", () => {
@@ -194,8 +207,11 @@ function bindEvents() {
       render();
     });
   });
-  document.querySelector<HTMLButtonElement>("[data-action='apply-plan']")?.addEventListener("click", () => void applyCampaignInstall(installFlow));
-  document.querySelectorAll<HTMLButtonElement>("[data-action='play']").forEach((button) => button.addEventListener("click", () => void playCurrentCampaign()));
+  document.querySelector<HTMLButtonElement>("[data-action='apply-plan']")?.addEventListener("click", () => {
+    scrollToInstallStatus = true;
+    void applyCampaignInstall(installFlow);
+  });
+  document.querySelectorAll<HTMLButtonElement>("[data-action='open-battle-net']").forEach((button) => button.addEventListener("click", () => void openBattleNet()));
   document.querySelectorAll<HTMLButtonElement>("[data-action='restore']").forEach((button) => {
     button.addEventListener("click", () => void restoreOriginals(button.dataset.target ?? ""));
   });
@@ -437,25 +453,19 @@ async function migrateLegacySnapshot(campaignId: string) {
   }
 }
 
-async function playCurrentCampaign() {
-  if (!gameDir) return;
+async function openBattleNet() {
   busy = true;
-  message = "Launching StarCraft II…";
+  message = "Opening Battle.net…";
   messageKind = "neutral";
   render();
   try {
-    const result = await invoke<{ message: string }>("launch_current_campaign", { gameDir });
-    const resume = resumeFor(savedResumes, inspection?.activeCampaign?.id);
-    const launchMessage = resume?.latestSave
-      ? `SC2 launched. Do not use cloud Continue; choose Load and open ${resume.latestSave.relativePath}.`
-      : inspection?.activeCampaign
-        ? "SC2 launched. Start a New Campaign; cloud Continue belongs to the Battle.net profile, not this mod."
-        : result.message;
-    message = launchMessage;
+    await invoke("open_battle_net");
+    const successMessage = "Battle.net is opening. Press Play there to launch StarCraft II.";
+    message = successMessage;
     messageKind = "success";
-    window.clearTimeout(launchMessageTimer);
-    launchMessageTimer = window.setTimeout(() => {
-      if (message === launchMessage) {
+    window.clearTimeout(battleNetMessageTimer);
+    battleNetMessageTimer = window.setTimeout(() => {
+      if (message === successMessage) {
         message = "";
         render();
       }

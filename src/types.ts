@@ -31,7 +31,6 @@ export type Inspection = {
   activeCampaign: { id: string; title: string; slot: string; targetPath: string; files: number } | null;
   managedCampaigns: { id: string; title: string; slot: string; targetPath: string; files: number }[];
   activeCampaigns: CurrentCampaign[];
-  canLaunch: boolean;
   recoveryPerformed: boolean;
 };
 
