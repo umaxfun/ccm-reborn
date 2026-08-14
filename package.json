@@ -1,7 +1,7 @@
 {
   "name": "ccm-reborn",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
     "check:source-size": "node scripts/check-source-size.mjs",
@@ -9,6 +9,7 @@
     "build": "tsc --noEmit && vite build",
     "tauri": "node scripts/tauri.mjs",
     "tauri:mac": "node scripts/release.mjs mac",
+    "tauri:mac:universal": "node scripts/release.mjs mac-universal",
     "tauri:win": "node scripts/release.mjs win",
     "tauri:linux": "node scripts/release.mjs linux",
     "tauri:all": "node scripts/release.mjs all",

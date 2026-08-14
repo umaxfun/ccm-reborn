@@ -161,6 +161,7 @@ available:
 
 ```sh
 npm run tauri:mac    # macOS .app and .dmg (macOS host)
+npm run tauri:mac:universal # universal macOS .app and .dmg (macOS host)
 npm run tauri:win    # x64 Windows NSIS setup.exe (Windows or macOS host)
 npm run tauri:linux  # x64 .deb and AppImage (Linux or macOS with Docker)
 npm run tauri:all    # all of the above from macOS
@@ -173,6 +174,25 @@ must run on macOS because macOS bundles require a Mac build host.
 
 The existing Makefile mirrors these commands; `make mac-universal` still builds
 one `.app` for Apple Silicon and Intel Macs.
+
+## GitHub Actions
+
+CI runs the frontend build and Rust tests on macOS, Windows, and Linux for every
+push and pull request. The **Release** workflow builds a universal macOS DMG,
+an x64 Windows NSIS installer, and x64 Linux `.deb` and AppImage packages, then
+attaches them to a GitHub Release.
+
+Trigger it by pushing a matching version tag after bumping the manifests:
+
+```sh
+npm run version:bump
+git commit -am "Release v0.1.1"
+git tag v0.1.1
+git push --follow-tags
+```
+
+It can also be started manually from the Actions tab; the requested version must
+match the manifests.
 
 ## Version bump
 
@@ -187,4 +207,5 @@ npm run version:bump -- 1.0.0  # set an exact semver version
 ```
 
 Add `--dry-run` to preview the result. The script refuses to write when those
-manifest versions are already out of sync.
+manifest versions are already out of sync. Run `node scripts/bump-version.mjs
+--check` to validate their synchronization without changing the version.

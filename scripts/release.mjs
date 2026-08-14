@@ -58,6 +58,14 @@ function buildMac() {
   tauri(["--bundles", "app,dmg"]);
 }
 
+function buildUniversalMac() {
+  if (platform !== "darwin") {
+    fail("macOS bundles must be built on macOS. Run this command on a Mac or use a macOS CI runner.");
+  }
+  run("rustup", ["target", "add", "aarch64-apple-darwin", "x86_64-apple-darwin"]);
+  tauri(["--target", "universal-apple-darwin", "--bundles", "app,dmg"]);
+}
+
 function buildWindows() {
   if (platform === "win32") {
     tauri(["--bundles", "nsis"]);
@@ -119,18 +127,21 @@ function buildLinux() {
 }
 
 function printHelp() {
-  console.log(`Usage: node scripts/release.mjs <mac|win|linux|all>
+  console.log(`Usage: node scripts/release.mjs <mac|mac-universal|win|linux|all>
 
-mac    Build macOS .app and .dmg on macOS.
-win    Build an x64 NSIS installer (native on Windows, cross-built on macOS).
-linux  Build x64 .deb and AppImage (native on Linux, Docker on macOS).
-all    Build all three release variants from macOS.`);
+mac           Build macOS .app and .dmg on macOS.
+mac-universal Build one macOS .app and .dmg for Apple Silicon and Intel Macs.
+win           Build an x64 NSIS installer (native on Windows, cross-built on macOS).
+linux         Build x64 .deb and AppImage (native on Linux, Docker on macOS).
+all           Build all three release variants from macOS.`);
 }
 
 if (["-h", "--help", undefined].includes(command)) {
   printHelp();
 } else if (command === "mac") {
   buildMac();
+} else if (command === "mac-universal") {
+  buildUniversalMac();
 } else if (command === "win") {
   buildWindows();
 } else if (command === "linux") {

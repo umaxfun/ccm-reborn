@@ -31,9 +31,7 @@ mac:
 	npm run tauri:mac
 
 mac-universal:
-	rustup target add aarch64-apple-darwin x86_64-apple-darwin
-	npm run tauri build -- --target universal-apple-darwin --bundles app
-	@printf '%s\n' 'Universal macOS app: src-tauri/target/universal-apple-darwin/release/bundle/macos/CCM Reborn.app'
+	npm run tauri:mac:universal
 
 setup-win:
 	node scripts/release.mjs setup-win

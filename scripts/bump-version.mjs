@@ -25,7 +25,8 @@ Examples:
   npm run version:bump -- patch
   npm run version:bump -- minor
   npm run version:bump -- 1.2.3
-  npm run version:bump -- 1.2.3-rc.1 --dry-run`);
+  npm run version:bump -- 1.2.3-rc.1 --dry-run
+  node scripts/bump-version.mjs --check`);
 }
 
 function json(path) {
@@ -59,7 +60,12 @@ if (args.includes("--help") || args.includes("-h")) {
 }
 
 const dryRun = args.includes("--dry-run");
-const values = args.filter((arg) => arg !== "--dry-run");
+const check = args.includes("--check");
+const values = args.filter((arg) => arg !== "--dry-run" && arg !== "--check");
+if (check && values.length !== 0) {
+  usage();
+  process.exit(1);
+}
 if (values.length > 1) {
   usage();
   process.exit(1);
@@ -86,6 +92,10 @@ if (uniqueVersions.size !== 1 || [...uniqueVersions].some((version) => typeof ve
 }
 
 const current = packageJson.version;
+if (check) {
+  console.log(`CCM Reborn manifests are synchronized at ${current}.`);
+  process.exit(0);
+}
 const requested = values[0] ?? "patch";
 const next = ["patch", "minor", "major"].includes(requested) ? nextVersion(current, requested) : requested;
 if (!semver.test(next)) fail(`expected a semantic version or patch/minor/major, received ${requested}.`);
