@@ -1,7 +1,10 @@
 node_modules/
+.env
 dist/
 work/
 src-tauri/target/
 *.DS_Store
 dev-catalog/packages/*
 .wrangler/
+.toolcache/*
+.wine-check*/

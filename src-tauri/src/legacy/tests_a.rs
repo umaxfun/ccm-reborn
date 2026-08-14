@@ -164,7 +164,7 @@
             package_size: None,
             game_dir: game_dir.display().to_string(),
         };
-        let result = install_archive(&game_dir, &request, &archive_path, &request.sha256).unwrap();
+        let result = install_archive(&game_dir, &request, &archive_path, &request.sha256, None).unwrap();
         assert_eq!(result.files_installed, 3);
         assert_eq!(fs::read(campaign_dir.join("zchar01.SC2Map")).unwrap(), b"custom mission");
         assert!(!campaign_dir.join("obsolete.SC2Map").exists());

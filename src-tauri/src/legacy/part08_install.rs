@@ -3,13 +3,14 @@ fn install_archive(
     request: &InstallRequest,
     archive_path: &Path,
     expected_hash: &str,
+    reporter: Option<&ProgressReporter>,
 ) -> Result<InstallResult, String> {
     ensure_manager_root(root)?;
+    reporter.map(|reporter| reporter.status("verifying-package", "Verifying package integrity…"));
     let actual_hash = sha256_file(archive_path)?;
     if actual_hash != expected_hash {
         return Err("The downloaded archive does not match the catalog SHA-256. Installation stopped.".into());
     }
-
     let package = read_ccm_package(archive_path)?;
     let package_files = inspect_ccm_package_files(archive_path, &package)?;
     refuse_nested_wol_package(&package.target_path, &package_files)?;
@@ -29,7 +30,9 @@ fn install_archive(
     let staging = managed_root.join("staging").join(Uuid::new_v4().to_string());
     fs::create_dir_all(&staging).map_err(io_error)?;
     let result = (|| {
+        reporter.map(|reporter| reporter.status("extracting", "Extracting package into a safe staging area…"));
         let staged_files = extract_ccm_package(archive_path, &package, &staging)?;
+        reporter.map(|reporter| reporter.status("backing-up", "Creating rollback snapshots before changing the campaign…"));
         ensure_shared_dependency_baselines(root, &dependency_roots_from_staged(&staged_files))?;
         let previous_install = snapshot_previous_install(root, &staging, &package.target_path)?;
         let previous_state = read_state_for_target(root, &package.target_path)?;
@@ -45,6 +48,7 @@ fn install_archive(
             .as_ref()
             .map(|state| dependency_roots_from_managed_files(&state.files))
             .unwrap_or_default();
+        reporter.map(|reporter| reporter.status("switching-profile", "Saving and switching the selected StarCraft II profile…"));
         let profile_transaction = apply_profile_transition_with_hook(
             root,
             &source_target,
@@ -89,6 +93,7 @@ fn install_archive(
         // the previous managed state and restore/remove its package-owned
         // files. A changed file is a hard stop; we never guess what is safe to
         // delete.
+        reporter.map(|reporter| reporter.status("restoring-previous", "Restoring the previous campaign files safely…"));
         let previous = match restore_existing_campaign(root, &package.target_path) {
             Ok(previous) => previous,
             Err(error) => {
@@ -115,7 +120,6 @@ fn install_archive(
         };
         let manifest = installed_manifest_from_staged(root, request, &package, expected_hash, &staged_files);
         let manifest_path = installed_manifest_path(root, &package.target_path)?;
-
         // At this point the former managed campaign may already have been
         // restored away.  Persist both snapshots before clearing the target,
         // so recovery can restore the former mod rather than only vanilla.
@@ -136,7 +140,6 @@ fn install_archive(
             }
             return Err(error);
         }
-
         // Kept for compatibility with installations created before the
         // profile-aware journal.  `pending-install.json` is the authoritative
         // recovery record for this operation.
@@ -147,7 +150,7 @@ fn install_archive(
             }
             return Err(error);
         }
-
+        reporter.map(|reporter| reporter.status("replacing-files", "Replacing campaign files…"));
         for directory in &state.cleared_directories {
             if let Err(error) = clear_campaign_target(&root, directory) {
                 if rollback_install_failure(root, &state, &manifest_path, previous_install.as_ref(), &profile_transaction).is_ok() {
@@ -162,7 +165,8 @@ fn install_archive(
             }
             return Err(error);
         }
-        for staged in &staged_files {
+        let total_files = staged_files.len();
+        for (index, staged) in staged_files.iter().enumerate() {
             let destination = safe_game_path(root, Path::new(&staged.destination))?;
             if let Err(error) = copy_file(&staged.path, &destination) {
                 if rollback_install_failure(root, &state, &manifest_path, previous_install.as_ref(), &profile_transaction).is_ok() {
@@ -170,8 +174,8 @@ fn install_archive(
                 }
                 return Err(error);
             }
+            reporter.map(|reporter| reporter.files("replacing-files", "Copying package files…", index + 1, total_files));
         }
-
         if let Err(error) = write_installed_manifest_atomic(&manifest_path, &manifest) {
             if rollback_install_failure(root, &state, &manifest_path, previous_install.as_ref(), &profile_transaction).is_ok() {
                 let _ = fs::remove_file(pending_install_path(root));
@@ -195,7 +199,7 @@ fn install_archive(
         write_pending_install_journal(root, &completed)?;
         let _ = fs::remove_file(journal_path(root));
         let _ = fs::remove_file(pending_install_path(root));
-
+        reporter.map(|reporter| reporter.status("finalizing", "Finalizing installation…"));
         Ok(InstallResult {
             campaign_id: state.campaign_id,
             title: state.title,
@@ -205,33 +209,31 @@ fn install_archive(
             files_installed: staged_files.len(),
         })
     })();
-
     // Keep staging data if rollback itself failed: the pending journal refers
     // to those backups and recovery on the next command needs them.
     if !pending_install_path(root).exists() {
         let _ = fs::remove_dir_all(&staging);
     }
+    if result.is_ok() {
+        reporter.map(|reporter| reporter.status("completed", "Installation completed successfully."));
+    }
     result
 }
-
 struct StagedFile {
     destination: String,
     source: String,
     path: PathBuf,
     sha256: String,
 }
-
 struct CcmPackage {
     content_prefix: String,
     target_path: String,
 }
-
 struct PackageFilePlan {
     source: String,
     destination: String,
     size: u64,
 }
-
 fn installed_manifest_path(root: &Path, target_path: &str) -> Result<PathBuf, String> {
     let target = safe_campaign_target(target_path)?;
     let slot = path_string(&target).replace('/', "_");
@@ -456,7 +458,6 @@ fn backup_campaign_directory(
             )?;
         }
     }
-
     for dependency_root in dependency_roots_from_staged(staged_files) {
         for original in collect_regular_files_or_file(&safe_game_path(root, &dependency_root)?)? {
             record_original_file(
@@ -468,8 +469,7 @@ fn backup_campaign_directory(
                 &mut positions,
             )?;
         }
-    }
-
+}
     for staged in staged_files {
         if let Some(position) = positions.get(&staged.destination) {
             files[*position].installed_sha256 = Some(staged.sha256.clone());

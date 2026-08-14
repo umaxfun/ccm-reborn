@@ -1,0 +1,497 @@
+{
+  "format": 1,
+  "description": "Reviewed editorial copy and controlled classification for the production campaign catalog. Discord source IDs and evidence live in ../discord/campaign-source-map.json.",
+  "tagTaxonomy": {
+    "AI Allies": "Campaigns where allied AI armies are a central mechanic.",
+    "Alternate Faction": "Replaces the usual player faction with a substantially different roster.",
+    "Armory Overhaul": "Substantially changes the between-mission upgrade system.",
+    "Campaign Expansion": "Adds missions, campaign-scale progression, or substantial new campaign content.",
+    "Campaign Overhaul": "Broadly remixes an official campaign rather than changing one isolated system.",
+    "Challenge Missions": "Built around bespoke mission challenges or major difficulty tests.",
+    "Chaos": "Intentionally unpredictable or absurd gameplay.",
+    "Co-op Commander": "Adapts a StarCraft II Co-op commander or commander-like faction.",
+    "Comedic": "Leans deliberately into jokes, parody, or a playful premise.",
+    "Crossover": "Brings a faction or theme from another game or setting into StarCraft II.",
+    "Difficulty Rebalance": "Designed primarily as a harder or rebalanced difficulty mode.",
+    "Heart of the Swarm": "Requires the Heart of the Swarm campaign branch.",
+    "High Difficulty": "Best suited to players seeking a demanding campaign.",
+    "Kerrigan Rework": "Substantially changes Kerrigan or her progression.",
+    "Legacy of the Void": "Requires the Legacy of the Void campaign branch.",
+    "Lore Scale": "Rescales units and statistics toward lore-inspired proportions.",
+    "Mission Remix": "Changes missions, objectives, encounters, or mission scripting.",
+    "Nova Covert Ops": "Requires the Nova Covert Ops campaign branch.",
+    "One-Hit-Point": "Makes units exceptionally fragile by using a one-hit-point ruleset.",
+    "Optional Challenges": "Offers optional objectives or challenge modes with rewards.",
+    "Persistent Progression": "Choices or unlocks persist across missions in a run.",
+    "Purifier": "Centers on Purifier-themed Protoss forces.",
+    "Randomizer": "Randomizes factions, units, or scenario elements between playthroughs.",
+    "Replayable": "Designed for materially varied repeat playthroughs.",
+    "Roguelike": "Uses random, run-based talents, curses, or similar roguelike progression.",
+    "Strategic Support": "Emphasizes directing or supporting allied forces instead of a full deathball.",
+    "Strategy Rework": "Changes unit scale, economy, or core strategic incentives.",
+    "Swarm Focus": "Puts extra emphasis on the Zerg swarm fantasy and its units.",
+    "Translation Available": "Has community translation support or translated reference material.",
+    "Unit Roster": "Introduces a notably different playable unit roster.",
+    "Unit Rework": "Reworks existing units, upgrades, mutations, or evolutions.",
+    "Vanilla+": "Expands the original campaign while aiming to retain its basic feel.",
+    "Wings of Liberty": "Requires the Wings of Liberty campaign branch."
+  },
+  "campaigns": [
+    {
+      "campaignId": "coop-ai",
+      "shortDescription": "Lead Raynor alongside a commandable AI ally, then recruit more allied forces as the Wings of Liberty campaign unfolds.",
+      "editorialBody": [
+        "Coop AI turns Wings of Liberty into a campaign about directing a partnered army. Your main ally, Deke, can attack, defend, retreat, harvest, or send a small drop force where you ping.",
+        "The mod keeps the campaign structure but asks you to coordinate allied units, with a 100-supply cap for the player and secrets that compensate for less-altered no-build missions."
+      ],
+      "tags": ["Wings of Liberty", "AI Allies", "Campaign Overhaul", "Strategic Support"],
+      "classification": { "styles": ["AI Allies", "Strategic Support"], "difficulty": "Challenging" },
+      "chooseThisIf": ["you enjoy directing allied armies as well as your own", "you want Wings of Liberty to reward map awareness and target calls"],
+      "avoidThisIf": ["you want a solo army-building campaign", "you dislike managing allied units through pings and commands"]
+    },
+    {
+      "campaignId": "junker-edition",
+      "shortDescription": "A Wings of Liberty roster and armory overhaul built around unusual units and an Inscryption-inspired salvage system.",
+      "editorialBody": [
+        "Junker Edition replaces Raynor's usual toolkit with familiar units in new roles, campaign absentees such as Widow Mines, and cut-unit surprises such as HERCs.",
+        "Its new armory asks you to trade away unit production to strengthen other categories, so every upgrade choice reshapes the army you can build. It works on all difficulties and is generally a little easier than vanilla."
+      ],
+      "tags": ["Wings of Liberty", "Campaign Overhaul", "Unit Roster", "Armory Overhaul"],
+      "classification": { "styles": ["Campaign Overhaul", "Armory Overhaul"], "difficulty": "Flexible" },
+      "chooseThisIf": ["you want a fresh Terran roster and meaningful armory trade-offs", "you like experimenting with unusual army compositions"],
+      "avoidThisIf": ["you want to preserve the standard Wings of Liberty armory", "you prefer upgrades that never remove production options"]
+    },
+    {
+      "campaignId": "lings-of-wiberty",
+      "shortDescription": "A deliberately absurd Wings of Liberty conversion that rebuilds the basic Terran roster, upgrades, research, and mercenaries.",
+      "editorialBody": [
+        "Lings of Wiberty changes every basic Terran unit into something else, then reshapes campaign systems around that roster so the run feels unlike standard Wings of Liberty.",
+        "It is a comedy-forward remix with extra research points; the unchanged Protoss and secret missions can be skipped. Set the game text to English and disable Simplified Command Card before playing."
+      ],
+      "tags": ["Wings of Liberty", "Campaign Overhaul", "Unit Roster", "Comedic"],
+      "classification": { "styles": ["Campaign Overhaul", "Comedic"], "difficulty": "Variable" },
+      "chooseThisIf": ["you want a strange, high-energy alternative to vanilla Terran", "you enjoy discovering a completely remixed roster"],
+      "avoidThisIf": ["you want lore-faithful units and story tone", "you cannot switch the game text to English"]
+    },
+    {
+      "campaignId": "mindhawk-s-gauntlet",
+      "shortDescription": "A Wings of Liberty challenge pack that turns each mission into a distinct test, from jokes to major difficulty spikes.",
+      "editorialBody": [
+        "MindHawk's Gauntlet reframes every Wings of Liberty mission as a challenge scenario rather than a conventional campaign run.",
+        "All difficulties are supported, but Brutal is substantially harder than Blizzard's Brutal; lower settings are available for a gentler start."
+      ],
+      "tags": ["Wings of Liberty", "Challenge Missions", "High Difficulty", "Mission Remix"],
+      "classification": { "styles": ["Challenge Missions", "Mission Remix"], "difficulty": "High" },
+      "chooseThisIf": ["you want each mission to pose a new puzzle or restriction", "you are looking for a difficult Wings of Liberty run"],
+      "avoidThisIf": ["you want the original mission flow", "you prefer a consistently relaxed difficulty curve"]
+    },
+    {
+      "campaignId": "moebius-pack",
+      "shortDescription": "Fight through Wings of Liberty with Moebius-infused Terran forces and a Nightmare-level combat challenge.",
+      "editorialBody": [
+        "Moebius Pack imagines the Moebius Corporation openly equipping Raynor's Raiders. Every player unit is replaced by a deadlier hybrid of Terran ideas with Protoss and Zerg technology.",
+        "It is playable across difficulties, but its intended Brutal experience is Nightmare Difficulty. Choose a lower setting if you want to explore the roster before committing to the full challenge."
+      ],
+      "tags": ["Wings of Liberty", "Alternate Faction", "Unit Roster", "High Difficulty"],
+      "classification": { "styles": ["Alternate Faction", "Unit Roster"], "difficulty": "High" },
+      "chooseThisIf": ["you want a powerful hybrid-tech Terran roster", "you want a campaign tuned for a serious combat challenge"],
+      "avoidThisIf": ["you want standard Raider units", "you are looking for a vanilla-difficulty first playthrough"]
+    },
+    {
+      "campaignId": "nightmare-difficulty-wings-of-liberty",
+      "shortDescription": "A Wings of Liberty difficulty overhaul that adds a Blizzard-style tier above Brutal and rebalances familiar Terran tools.",
+      "editorialBody": [
+        "Nightmare Difficulty is built as an above-Brutal Wings of Liberty experience. It improves the viability of units such as Predators, Hellions, and Wraiths while reducing the all-purpose dominance of Marines and Siege Tanks.",
+        "The dedicated Nightmare setting is the intended way to play. Lower settings retain the balance changes but were not the primary testing target."
+      ],
+      "tags": ["Wings of Liberty", "Difficulty Rebalance", "High Difficulty", "Unit Rework"],
+      "classification": { "styles": ["Difficulty Rebalance", "Unit Rework"], "difficulty": "High" },
+      "chooseThisIf": ["you know Wings of Liberty and want a tougher, broader unit meta", "you want underused Terran units to matter more"],
+      "avoidThisIf": ["you want unmodified vanilla balance", "you are not looking for an above-Brutal campaign"]
+    },
+    {
+      "campaignId": "raynor-has-gone-rogue-like",
+      "shortDescription": "A replayable Wings of Liberty roguelike where permanent talents, curses, and optional plagues reshape every run.",
+      "editorialBody": [
+        "Raynor has Gone Rogue(like)! offers choices of permanent talents during missions, with rewards for progress and side objectives that carry through the campaign.",
+        "Power comes with curses that also persist, plus optional challenge curses and more severe plagues. Difficulty controls how many curses appear, making the campaign a run-building game rather than a fixed build order exercise."
+      ],
+      "tags": ["Wings of Liberty", "Roguelike", "Persistent Progression", "Replayable"],
+      "classification": { "styles": ["Roguelike", "Persistent Progression"], "difficulty": "Variable" },
+      "chooseThisIf": ["you enjoy drafting upgrades and adapting to random choices", "you want repeat runs to develop differently"],
+      "avoidThisIf": ["you prefer a predictable campaign tech path", "you dislike permanent penalties and RNG-driven decisions"]
+    },
+    {
+      "campaignId": "real-scale-wol",
+      "shortDescription": "Play Wings of Liberty at lore-inspired scale, with tiny Marines, enormous Ultralisks, and statistics rebuilt around their new proportions.",
+      "editorialBody": [
+        "Real-Scale WoL rescales units toward their Field Manual proportions, then changes health, supply, and other statistics to make those sizes matter in play.",
+        "The result is not merely visual: armies use thousands of hit points and very different supply economics, creating a strategic feel that can resemble a different game."
+      ],
+      "tags": ["Wings of Liberty", "Lore Scale", "Strategy Rework", "Campaign Overhaul"],
+      "classification": { "styles": ["Lore Scale", "Strategy Rework"], "difficulty": "Variable" },
+      "chooseThisIf": ["you want a lore-inspired scale experiment", "you enjoy relearning army composition and supply economics"],
+      "avoidThisIf": ["you want standard StarCraft II unit scale", "you prefer familiar unit statistics and pacing"]
+    },
+    {
+      "campaignId": "wol-1hp-paintball",
+      "shortDescription": "A Wings of Liberty one-hit-point ruleset where every unit, from Marines to Battlecruisers, dies almost instantly.",
+      "editorialBody": [
+        "WOL - 1hp Paintball gives every combat unit one hit point. Positioning, first contact, detection, and area damage become far more decisive than normal durability.",
+        "It is a compact challenge concept applied across the campaign: expect frantic, highly lethal engagements rather than conventional attrition."
+      ],
+      "tags": ["Wings of Liberty", "One-Hit-Point", "Challenge Missions", "High Difficulty"],
+      "classification": { "styles": ["One-Hit-Point", "Challenge Missions"], "difficulty": "High" },
+      "chooseThisIf": ["you want an extreme fragility challenge", "you enjoy fast, decisive tactical fights"],
+      "avoidThisIf": ["you rely on tanking damage or slow macro", "you want standard campaign balance"]
+    },
+    {
+      "campaignId": "wol-tychus-edition-nightmare",
+      "shortDescription": "Play Wings of Liberty with Tychus and his outlaws, commander-style upgrades, and Nightmare tuning to keep their firepower in check.",
+      "editorialBody": [
+        "Tychus Edition puts the Koprulu Sector's favourite outlaw in command. Armory gear, lab research, prestige-style bonuses, and even the Odin support a Co-op Tychus-inspired campaign.",
+        "The campaign is tuned around Nightmare to counter the faction's raw power. It is a finished version, with a future remake planned rather than ongoing feature work."
+      ],
+      "tags": ["Wings of Liberty", "Alternate Faction", "Co-op Commander", "High Difficulty"],
+      "classification": { "styles": ["Alternate Faction", "Co-op Commander"], "difficulty": "High" },
+      "chooseThisIf": ["you want Tychus-style hero units in Wings of Liberty", "you are comfortable with Nightmare-based tuning"],
+      "avoidThisIf": ["you want Raynor's normal army", "you are looking for a low-pressure first run"]
+    },
+    {
+      "campaignId": "wings-of-liberty-human-edition",
+      "shortDescription": "Fight through Wings of Liberty as Warcraft III Humans, using riflemen, swords, gunpowder, and an intentionally easier power curve.",
+      "editorialBody": [
+        "Human Edition replaces the Terran campaign faction with Warcraft III Human units while leaving their original-style stats largely intact.",
+        "That mismatch is part of the joke: the low-tech army can overwhelm StarCraft's futuristic factions. The mod supports all difficulties, with Brutal receiving the primary testing."
+      ],
+      "tags": ["Wings of Liberty", "Alternate Faction", "Crossover", "Comedic"],
+      "classification": { "styles": ["Alternate Faction", "Crossover"], "difficulty": "Low" },
+      "chooseThisIf": ["you want a playful Warcraft III crossover", "you prefer a more forgiving Wings of Liberty campaign"],
+      "avoidThisIf": ["you want StarCraft lore and balance to stay intact", "you are seeking a high-difficulty challenge"]
+    },
+    {
+      "campaignId": "wings-of-mengsk",
+      "shortDescription": "Command Emperor Mengsk's forces through Wings of Liberty with a commander-style Dominion roster and Nightmare roots.",
+      "editorialBody": [
+        "Wings of Mengsk replaces the player side with Mengsk's forces, including a continuing set of armory upgrades and campaign additions.",
+        "It is based on Nightmare Difficulty, so lower difficulty settings are recommended if a mission becomes too demanding."
+      ],
+      "tags": ["Wings of Liberty", "Alternate Faction", "Co-op Commander", "High Difficulty"],
+      "classification": { "styles": ["Alternate Faction", "Co-op Commander"], "difficulty": "High" },
+      "chooseThisIf": ["you want to lead the Dominion from Mengsk's perspective", "you want a commander-style roster with a tougher baseline"],
+      "avoidThisIf": ["you want a vanilla Raider campaign", "you do not want Nightmare-derived mission tuning"]
+    },
+    {
+      "campaignId": "f-yuri-of-the-swarm",
+      "shortDescription": "A Heart of the Swarm conversion that brings Red Alert 2's Yuri faction, mind control, and a full replacement hero cast to StarCraft II.",
+      "editorialBody": [
+        "(F)Yuri of the Swarm lets Yuri's faction take over Heart of the Swarm. Mind control, grinding, plagues, mutations, and a new roster replace the standard Zerg approach.",
+        "All missions are converted; Kerrigan becomes Yuri Prime, and characters such as Niadra, Stukov, Dehaka, and the Hyperion are recast as fitting hero units."
+      ],
+      "tags": ["Heart of the Swarm", "Alternate Faction", "Crossover", "Campaign Overhaul"],
+      "classification": { "styles": ["Alternate Faction", "Crossover"], "difficulty": "Variable" },
+      "chooseThisIf": ["you want a full faction conversion rather than a Zerg rework", "you enjoy Red Alert-style mind control and bizarre tools"],
+      "avoidThisIf": ["you want to play Kerrigan and the standard Swarm", "you prefer a lore-faithful Heart of the Swarm story"]
+    },
+    {
+      "campaignId": "abathur-s-whimsy",
+      "shortDescription": "A playful Heart of the Swarm overhaul with reworked Zerg strains, unusual Kerrigan abilities, and optional mission challenges.",
+      "editorialBody": [
+        "Abathur's Whimsy makes broad, practical, and sometimes whimsical changes to every Swarm unit, including defensive and noncombat tools. Evolved strains receive additional twists.",
+        "Kerrigan's active and passive abilities are heavily reworked, while every mission adds an optional challenge or bonus objective that grants a permanent reward."
+      ],
+      "tags": ["Heart of the Swarm", "Campaign Overhaul", "Unit Rework", "Kerrigan Rework", "Optional Challenges"],
+      "classification": { "styles": ["Unit Rework", "Kerrigan Rework"], "difficulty": "Variable" },
+      "chooseThisIf": ["you want new tools for both the Swarm and Kerrigan", "you like optional objectives with lasting rewards"],
+      "avoidThisIf": ["you want unmodified evolutions and Kerrigan powers", "you prefer to ignore extra mission goals"]
+    },
+    {
+      "campaignId": "hots-1hp-paintball",
+      "shortDescription": "A Heart of the Swarm one-hit-point ruleset where Zerglings, Ultralisks, and everything in between are equally fragile.",
+      "editorialBody": [
+        "HOTS - 1hp Paintball applies the one-hit-point premise to Heart of the Swarm. Survival depends on initiative, positioning, and eliminating threats before they fire back.",
+        "The familiar campaign becomes a fast tactical challenge where unit size no longer guarantees durability."
+      ],
+      "tags": ["Heart of the Swarm", "One-Hit-Point", "Challenge Missions", "High Difficulty"],
+      "classification": { "styles": ["One-Hit-Point", "Challenge Missions"], "difficulty": "High" },
+      "chooseThisIf": ["you want an extreme twist on Zerg combat", "you enjoy decisive, high-lethality encounters"],
+      "avoidThisIf": ["you want Ultralisks and heroes to absorb damage", "you prefer a normal Heart of the Swarm pace"]
+    },
+    {
+      "campaignId": "hots-ai-allies",
+      "shortDescription": "A Heart of the Swarm campaign with recruitable allied broods, tougher opposition, and a much more swarm-oriented Kerrigan.",
+      "editorialBody": [
+        "HOTS AI Allies adds new allied forces to every map and lets you collect more as the campaign progresses. Each brood has its own evolution and battlefield role, while the pingable Swarm ally can attack a marked location.",
+        "The core campaign remains recognizable, but new enemies, a 125 supply cap, and major Kerrigan and zergling-spawn buffs make it a more coordinated, swarm-heavy experience. It is balanced around Brutal."
+      ],
+      "tags": ["Heart of the Swarm", "AI Allies", "Campaign Overhaul", "Swarm Focus", "High Difficulty"],
+      "classification": { "styles": ["AI Allies", "Swarm Focus"], "difficulty": "High" },
+      "chooseThisIf": ["you want to lead several distinct Zerg broods", "you want a more active allied-army campaign"],
+      "avoidThisIf": ["you want the original solo Heart of the Swarm balance", "you do not want Brutal-oriented tuning"]
+    },
+    {
+      "campaignId": "heart-of-the-swarm-randomizer",
+      "shortDescription": "A Heart of the Swarm randomizer that turns every playthrough into a different, deliberately chaotic campaign.",
+      "editorialBody": [
+        "Heart of the Swarm Randomizer swaps the expected units and scenarios for unpredictable alternatives, from unusual rescued forces to an entirely unexpected Queen of Blades.",
+        "Its goal is novelty rather than a carefully fixed balance curve. The CCM conversion was not fully playtested, so report any broken scenario you encounter."
+      ],
+      "tags": ["Heart of the Swarm", "Randomizer", "Chaos", "Replayable"],
+      "classification": { "styles": ["Randomizer", "Chaos"], "difficulty": "Variable" },
+      "chooseThisIf": ["you want every campaign run to surprise you", "you enjoy adapting to strange unit and mission combinations"],
+      "avoidThisIf": ["you need a fully predictable, polished balance experience", "you want the normal story progression and roster"]
+    },
+    {
+      "campaignId": "hots-overmind-mod",
+      "shortDescription": "Tackle Heart of the Swarm with a powerful StarCraft I-inspired Zerg faction, built for Nightmare but usable on lower settings.",
+      "editorialBody": [
+        "HotS Overmind Mod replaces the usual player toolkit with a new Zerg faction inspired by StarCraft I.",
+        "It targets a Nightmare-level run while still supporting lower difficulty settings, making it a good pick for players who want a more forceful and old-school Swarm identity."
+      ],
+      "tags": ["Heart of the Swarm", "Alternate Faction", "Unit Roster", "High Difficulty"],
+      "classification": { "styles": ["Alternate Faction", "Unit Roster"], "difficulty": "High" },
+      "chooseThisIf": ["you want a StarCraft I-flavoured Zerg faction", "you want an alternative to standard Heart of the Swarm units"],
+      "avoidThisIf": ["you want vanilla Kerrigan progression", "you do not want Nightmare-oriented tuning"]
+    },
+    {
+      "campaignId": "kerrigan-has-gone-rogue-like",
+      "shortDescription": "A Heart of the Swarm roguelike where permanent talents, curses, and hidden lootboxes create a new run every time.",
+      "editorialBody": [
+        "Kerrigan has Gone Rogue(like)! gives recurring talent choices for mission progress, side objectives, and hidden lootboxes. Those upgrades last until Mengsk is defeated.",
+        "Curses scale the challenge alongside your power; difficulty determines their frequency, and each mission can offer an optional challenge curse without a permanent penalty."
+      ],
+      "tags": ["Heart of the Swarm", "Roguelike", "Persistent Progression", "Replayable", "Kerrigan Rework"],
+      "classification": { "styles": ["Roguelike", "Persistent Progression"], "difficulty": "Variable" },
+      "chooseThisIf": ["you want a draft-driven Kerrigan campaign", "you value repeatable runs with unlocks and random rewards"],
+      "avoidThisIf": ["you want fixed evolutions and a predictable build path", "you dislike curse systems or hidden pickups"]
+    },
+    {
+      "campaignId": "nightmare-difficulty",
+      "shortDescription": "A Heart of the Swarm difficulty overhaul that adds an above-Brutal setting while rebalancing units, mutations, evolutions, and Kerrigan.",
+      "editorialBody": [
+        "Nightmare Difficulty for Heart of the Swarm is designed as a Blizzard-like difficulty tier above Brutal. It broadens the useful Swarm toolkit while making Kerrigan less universally dominant.",
+        "All difficulty settings are supported, but the dedicated Nightmare option is the primary testing target."
+      ],
+      "tags": ["Heart of the Swarm", "Difficulty Rebalance", "High Difficulty", "Unit Rework", "Kerrigan Rework"],
+      "classification": { "styles": ["Difficulty Rebalance", "Kerrigan Rework"], "difficulty": "High" },
+      "chooseThisIf": ["you know Heart of the Swarm and want a harder, more varied meta", "you want evolutions and mutations to matter more"],
+      "avoidThisIf": ["you want the original campaign's balance", "you are not looking for an above-Brutal challenge"]
+    },
+    {
+      "campaignId": "real-scale-heart-of-the-swarm",
+      "shortDescription": "A lore-scale Heart of the Swarm overhaul with enormous creatures, tiny infantry, and statistics rebuilt for their canonical proportions.",
+      "editorialBody": [
+        "Real-Scale Heart of the Swarm resizes units toward lore-inspired proportions and changes their health, supply demands, and battlefield roles to match.",
+        "The campaign becomes a strategy rework rather than a cosmetic mod: capital ships, massive creatures, and ordinary units all ask for different planning."
+      ],
+      "tags": ["Heart of the Swarm", "Lore Scale", "Strategy Rework", "Campaign Overhaul"],
+      "classification": { "styles": ["Lore Scale", "Strategy Rework"], "difficulty": "Variable" },
+      "chooseThisIf": ["you want lore-inspired scale to affect real gameplay", "you enjoy learning a new strategic economy"],
+      "avoidThisIf": ["you want standard unit proportions and statistics", "you prefer the original Heart of the Swarm pacing"]
+    },
+    {
+      "campaignId": "the-swarm-reborn",
+      "shortDescription": "A large Heart of the Swarm expansion with new commanders, missions, objectives, evolutions, story content, and New Game+.",
+      "editorialBody": [
+        "The Swarm Reborn is a vanilla+ campaign expansion. It adds unlockable races and commanders, capable AI allies, new missions, revised objectives and maps, new mutations and evolutions, and quality-of-life improvements.",
+        "It is approachable on lower difficulties but also includes a Ruthless setting, level-gated challenge missions, and New Game+ for replaying with unlocked commanders."
+      ],
+      "tags": ["Heart of the Swarm", "Vanilla+", "Campaign Expansion", "AI Allies", "Replayable"],
+      "classification": { "styles": ["Vanilla+", "Campaign Expansion"], "difficulty": "Flexible" },
+      "chooseThisIf": ["you want the most expanded Heart of the Swarm-style campaign", "you enjoy long-term unlocks, new missions, and New Game+"],
+      "avoidThisIf": ["you want a short, close-to-vanilla campaign", "you do not want a large amount of new systems and content"]
+    },
+    {
+      "campaignId": "violet-s-hots-rework-mod",
+      "shortDescription": "A broad Heart of the Swarm rework that puts the emphasis back on commanding the Swarm while changing units, systems, and missions.",
+      "editorialBody": [
+        "Violet's HoTS Rework reinterprets Heart of the Swarm around a stronger swarm identity without making Kerrigan irrelevant.",
+        "It makes substantial, intentionally undisclosed changes to most units, several systems, and missions. All difficulties are supported."
+      ],
+      "tags": ["Heart of the Swarm", "Campaign Overhaul", "Swarm Focus", "Unit Rework", "Mission Remix"],
+      "classification": { "styles": ["Campaign Overhaul", "Swarm Focus"], "difficulty": "Flexible" },
+      "chooseThisIf": ["you want a fresh interpretation of the Swarm campaign", "you prefer to discover major changes while playing"],
+      "avoidThisIf": ["you want a detailed spoiler-heavy change list", "you want vanilla units and mission systems"]
+    },
+    {
+      "campaignId": "heart-of-eyeser-ccm-available-poor-google-translate",
+      "shortDescription": "A Chinese-community Heart of the Swarm overhaul with extensive model, unit, and enemy changes, plus a community rough translation.",
+      "editorialBody": [
+        "Heart of Eyeser makes broad changes to models, playable units, and enemies. It also offers abundant resources and lets units access all three standard mutation paths before choosing further enhancement.",
+        "Much of the original text is untranslated; a community rough translation document is available. Start on Casual or Normal if you need time to read the changed text."
+      ],
+      "tags": ["Heart of the Swarm", "Campaign Overhaul", "Unit Roster", "Translation Available"],
+      "classification": { "styles": ["Campaign Overhaul", "Unit Roster"], "difficulty": "Variable" },
+      "chooseThisIf": ["you want a generously resourced, heavily changed Heart of the Swarm run", "you are comfortable using community translation material"],
+      "avoidThisIf": ["you require complete polished English text", "you want the original mutation choices and economy"]
+    },
+    {
+      "campaignId": "aeon-of-purification",
+      "shortDescription": "A Legacy of the Void Purifier conversion with a custom tech tree, mission changes, bonus objectives, and future-facing Spear of Adun systems.",
+      "editorialBody": [
+        "Aeon of Purification replaces the default Protoss toolkit with a mix of familiar and new Purifier units. Missions add enemy coordination, bonus objectives, and rewards such as future-mission help or extra Solarite.",
+        "The campaign uses Nightmare AI scripts without requiring Nightmare difficulty, and all settings work. The Prologue is primarily a unit demo and can be skipped."
+      ],
+      "tags": ["Legacy of the Void", "Alternate Faction", "Purifier", "Mission Remix", "Optional Challenges"],
+      "classification": { "styles": ["Alternate Faction", "Mission Remix"], "difficulty": "Flexible" },
+      "chooseThisIf": ["you want a custom Purifier roster and mission rewards", "you enjoy extra objectives with strategic payoff"],
+      "avoidThisIf": ["you want the standard Protoss tech tree", "you only want an untouched Legacy of the Void campaign"]
+    },
+    {
+      "campaignId": "artanis-has-gone-zeratul-like",
+      "shortDescription": "A Legacy of the Void roguelike that turns Artanis' campaign into a run of persistent talents, curses, classes, and repeatable builds.",
+      "editorialBody": [
+        "Artanis has Gone Zeratul(like)! brings the persistent-talent-and-curse structure of the Rogue(like) campaigns to Legacy of the Void. Random choices, classes, and stackable build-defining effects make each run develop differently.",
+        "The mapped forum post is active and its starter message is older than Discord RPC's recent-message window; the classification is based on the verified post title, catalog metadata, and current player discussion."
+      ],
+      "tags": ["Legacy of the Void", "Roguelike", "Persistent Progression", "Replayable"],
+      "classification": { "styles": ["Roguelike", "Persistent Progression"], "difficulty": "Variable" },
+      "chooseThisIf": ["you want a long-form talent-drafting Legacy of the Void run", "you enjoy unlocking classes and trying different builds"],
+      "avoidThisIf": ["you want a fixed, vanilla campaign progression", "you dislike randomised choices and persistent curses"]
+    },
+    {
+      "campaignId": "fight-with-ally",
+      "shortDescription": "A Legacy of the Void support campaign where small player forces enable powerful AI allies instead of building one giant deathball.",
+      "editorialBody": [
+        "Fight with ally! gives you a limited army and places allied forces in the main attacker or defender role. Your job is to support them and remove the threats they cannot handle.",
+        "You can still build an army, but an 80-supply cap makes coordination and tactical assistance the central playstyle."
+      ],
+      "tags": ["Legacy of the Void", "AI Allies", "Strategic Support", "Campaign Overhaul"],
+      "classification": { "styles": ["AI Allies", "Strategic Support"], "difficulty": "Challenging" },
+      "chooseThisIf": ["you want a support-oriented Protoss campaign", "you like winning by enabling allied attacks"],
+      "avoidThisIf": ["you want to amass a large personal army", "you dislike strict supply limits"]
+    },
+    {
+      "campaignId": "legacy-of-the-void-gauntlet",
+      "shortDescription": "A Legacy of the Void mission challenge series with meme scenarios, serious tests, and an unusually steep difficulty scale.",
+      "editorialBody": [
+        "Legacy of the Void Gauntlet gives every mission a distinct challenge treatment, from lighthearted gimmicks to substantial difficulty increases.",
+        "It was completed and playtested on all four settings, but each setting is roughly two steps above its normal counterpart. Brutal is intended as Grant-level difficulty."
+      ],
+      "tags": ["Legacy of the Void", "Challenge Missions", "High Difficulty", "Mission Remix"],
+      "classification": { "styles": ["Challenge Missions", "Mission Remix"], "difficulty": "Extreme" },
+      "chooseThisIf": ["you want a rigorous, mission-by-mission challenge run", "you are comfortable choosing a lower setting than usual"],
+      "avoidThisIf": ["you expect normal difficulty labels to mean normal difficulty", "you want a relaxed first Legacy of the Void run"]
+    },
+    {
+      "campaignId": "legacy-of-the-xel-naga",
+      "shortDescription": "Play Legacy of the Void as the Zeratul Co-op faction, with themed enemy compositions built to keep its powerful tools in check.",
+      "editorialBody": [
+        "Legacy of the Xel'Naga swaps the player side for Zeratul's Co-op faction, including its distinctive units and commander flavour.",
+        "Enemy themes are adjusted to match the matchup—for example, Tal'darim forces use Ascendants, Vanguards, and Wrathwalkers—so the new faction remains powerful without becoming a free win."
+      ],
+      "tags": ["Legacy of the Void", "Alternate Faction", "Co-op Commander", "Mission Remix"],
+      "classification": { "styles": ["Alternate Faction", "Co-op Commander"], "difficulty": "Challenging" },
+      "chooseThisIf": ["you want a Zeratul commander campaign", "you like themed enemy compositions and faction matchups"],
+      "avoidThisIf": ["you want Artanis' standard tech tree", "you prefer unaltered mission enemy rosters"]
+    },
+    {
+      "campaignId": "lotv-1hp-paintball",
+      "shortDescription": "A Legacy of the Void one-hit-point campaign where every unit is fragile and every engagement must be decided immediately.",
+      "editorialBody": [
+        "LotV - 1hp Paintball applies the one-hit-point challenge to Legacy of the Void. Units of every size can be eliminated instantly, so initiative and positioning matter more than durability.",
+        "The mapped forum starter is outside Discord RPC's recent-message window; this summary preserves the verified one-hit-point premise while avoiding claims about individual mission changes."
+      ],
+      "tags": ["Legacy of the Void", "One-Hit-Point", "Challenge Missions", "High Difficulty"],
+      "classification": { "styles": ["One-Hit-Point", "Challenge Missions"], "difficulty": "High" },
+      "chooseThisIf": ["you want the 1 HP challenge across the Protoss campaign", "you enjoy very fast tactical combat"],
+      "avoidThisIf": ["you want normal shields, durability, and attrition", "you prefer a forgiving campaign pace"]
+    },
+    {
+      "campaignId": "lotv-chaos",
+      "shortDescription": "An intentionally opaque, chaotic Legacy of the Void remix from MindHawk for players who prefer discovery over a conventional feature list.",
+      "editorialBody": [
+        "LotV ChAoS is presented by its author as an experiment rather than a carefully explained balance overhaul. Its source deliberately withholds a feature breakdown.",
+        "Treat it as a surprise-driven Legacy of the Void run: the catalog can classify its tone, but should not invent details the source does not document."
+      ],
+      "tags": ["Legacy of the Void", "Chaos", "Campaign Overhaul", "Comedic"],
+      "classification": { "styles": ["Chaos", "Comedic"], "difficulty": "Unknown" },
+      "chooseThisIf": ["you enjoy going in blind", "you want an intentionally chaotic MindHawk experiment"],
+      "avoidThisIf": ["you need a detailed feature list before installing", "you want a predictable, balance-focused campaign"]
+    },
+    {
+      "campaignId": "nightmare-difficulty-legacy-of-the-void",
+      "shortDescription": "A Legacy of the Void difficulty overhaul with an above-Brutal Nightmare setting and rebalanced faction units and Spear of Adun powers.",
+      "editorialBody": [
+        "Nightmare Difficulty for Legacy of the Void includes the Prologue and main campaign, aiming to feel like a Blizzard-style setting above Brutal.",
+        "It rebalances most faction units and Spear of Adun abilities to reduce outlier power. All settings work, but Nightmare is the intended testing target."
+      ],
+      "tags": ["Legacy of the Void", "Difficulty Rebalance", "High Difficulty", "Unit Rework"],
+      "classification": { "styles": ["Difficulty Rebalance", "Unit Rework"], "difficulty": "High" },
+      "chooseThisIf": ["you want a tougher Legacy of the Void campaign with broader tools", "you want Spear of Adun powers to be more deliberately balanced"],
+      "avoidThisIf": ["you want untouched vanilla balance", "you are not seeking an above-Brutal challenge"]
+    },
+    {
+      "campaignId": "real-scale-lotv",
+      "shortDescription": "A lore-scale Legacy of the Void overhaul where canonical size, health, supply, and battlefield roles all change together.",
+      "editorialBody": [
+        "Real-Scale LotV changes unit proportions toward lore-inspired scale, from tiny infantry to enormous capital forces, then adjusts statistics to make the scale meaningful.",
+        "It is a campaign-wide strategy rework rather than a visual-only mod, asking you to relearn the value and logistics of familiar Protoss tools."
+      ],
+      "tags": ["Legacy of the Void", "Lore Scale", "Strategy Rework", "Campaign Overhaul"],
+      "classification": { "styles": ["Lore Scale", "Strategy Rework"], "difficulty": "Variable" },
+      "chooseThisIf": ["you want lore-inspired scale to change strategy", "you enjoy rethinking supply and unit roles"],
+      "avoidThisIf": ["you want normal StarCraft II proportions", "you prefer the original Legacy of the Void economy"]
+    },
+    {
+      "campaignId": "legacy-of-purifier-1-04-ccm-translated",
+      "shortDescription": "A translated Legacy of the Void Purifier campaign built around powerful mechanical forces and revivable robots fighting Amon.",
+      "editorialBody": [
+        "Legacy of the Purifiers lets you play the campaign as Purifier forces that combine heavy mechanical units with revivable robots.",
+        "It is a Chinese-community release made available through CCM, with community-facing English publishing and support references."
+      ],
+      "tags": ["Legacy of the Void", "Alternate Faction", "Purifier", "Translation Available"],
+      "classification": { "styles": ["Alternate Faction", "Purifier"], "difficulty": "Variable" },
+      "chooseThisIf": ["you want a Purifier-themed faction conversion", "you enjoy durable mechanical armies and revival mechanics"],
+      "avoidThisIf": ["you want Artanis' normal roster", "you require a fully native English support channel"]
+    },
+    {
+      "campaignId": "mod-ccm-translated",
+      "shortDescription": "A Legacy of the Void companion campaign by Eyeser, distributed through CCM with limited English documentation.",
+      "editorialBody": [
+        "This package is the Legacy of the Void companion referenced by the Heart of Eyeser source. The available source confirms separate CCM availability but does not document its specific systems in enough detail for a stronger claim.",
+        "The conservative classification keeps it discoverable as an Eyeser campaign while clearly signaling that its feature description needs a dedicated primary source before expansion."
+      ],
+      "tags": ["Legacy of the Void", "Campaign Overhaul", "Translation Available"],
+      "classification": { "styles": ["Campaign Overhaul"], "difficulty": "Unknown" },
+      "chooseThisIf": ["you want to explore Eyeser's Legacy of the Void companion release", "you are comfortable discovering its systems in game"],
+      "avoidThisIf": ["you need a documented feature list before installing", "you require complete polished English documentation"]
+    },
+    {
+      "campaignId": "avon-overt-cops",
+      "shortDescription": "A completed, deliberately goofy Nova Covert Ops remix with unconventional units, a customisable Operative, and hostile Psi-Emitter Zerg.",
+      "editorialBody": [
+        "Avon: Overt Cops replaces dependable NCO staples with stranger tools such as HERCs and Widow Mines. Nova becomes a customisable Operative whose cost changes with her loadout.",
+        "New upgrades and self-summoned Feral Zerg make it a playful unit-roster remix. Set the game language to English if the mod does not activate correctly."
+      ],
+      "tags": ["Nova Covert Ops", "Campaign Overhaul", "Unit Roster", "Comedic"],
+      "classification": { "styles": ["Campaign Overhaul", "Comedic"], "difficulty": "Variable" },
+      "chooseThisIf": ["you want a strange, playful NCO roster", "you like customising a hero loadout and experimenting with odd units"],
+      "avoidThisIf": ["you want standard Nova abilities and units", "you cannot set StarCraft II's language to English if needed"]
+    },
+    {
+      "campaignId": "nco-redux-pro-max-legendary-edition",
+      "shortDescription": "A Nova Covert Ops ally-focused remix based on NCO Redux, with more supporting forces and upgrades than the base version.",
+      "editorialBody": [
+        "NCO Redux Pro Max Legendary Edition is described by its author as an NCO fight-with-allies mod based on NCO Redux 1.1, adding more allies and upgrade options to the campaign.",
+        "The long-running forum post's starter is outside Discord RPC's recent-message window; this summary remains intentionally scoped to the verified release description rather than treating discussion replies as a specification."
+      ],
+      "tags": ["Nova Covert Ops", "AI Allies", "Campaign Overhaul", "Unit Rework"],
+      "classification": { "styles": ["AI Allies", "Campaign Overhaul"], "difficulty": "Variable" },
+      "chooseThisIf": ["you want Nova Covert Ops with a stronger allied presence", "you want more upgrade options on top of an NCO Redux base"],
+      "avoidThisIf": ["you want the original solo NCO structure", "you need a full mission-by-mission feature reference"]
+    },
+    {
+      "campaignId": "nova-outlaw-ops",
+      "shortDescription": "A major Nova Covert Ops overhaul that expands the Heaven's Devils with six new Outlaws, swapping, new enemies, and campaign-specific systems.",
+      "editorialBody": [
+        "Nova: Outlaw Ops turns the Heaven's Devils into a campaign faction rather than simply dropping Co-op Tychus into NCO. It adds six new Outlaws, Outlaw swapping mid-mission, faction reworks, squad upgrades, tech structures, and custom assets.",
+        "Three unique enemy factions, new Auto-Turret upgrade paths, and broader campaign systems make this the most feature-heavy NCO pick. Note the documented save/top-bar and Outlaw Swap UI issues before starting a long run."
+      ],
+      "tags": ["Nova Covert Ops", "Co-op Commander", "Campaign Overhaul", "Campaign Expansion", "Unit Roster"],
+      "classification": { "styles": ["Co-op Commander", "Campaign Expansion"], "difficulty": "Challenging" },
+      "chooseThisIf": ["you want a deep Heaven's Devils campaign with many hero choices", "you value new enemy factions and campaign systems over a close-to-vanilla run"],
+      "avoidThisIf": ["you want the standard Nova roster", "you cannot tolerate known save-state or UI edge cases"]
+    }
+  ]
+}

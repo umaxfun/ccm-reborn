@@ -61,6 +61,15 @@ export type InstallResult = {
   packageSha256: string;
   filesInstalled: number;
 };
+export type InstallProgress = {
+  operationId: string;
+  phase: string;
+  message: string;
+  downloadedBytes: number | null;
+  totalBytes: number | null;
+  completedFiles: number | null;
+  totalFiles: number | null;
+};
 export type ProgressFilePlan = {
   relativePath: string;
   source: string;

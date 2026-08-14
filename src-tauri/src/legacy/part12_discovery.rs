@@ -173,6 +173,7 @@ fn standard_game_locations() -> Vec<PathBuf> {
         std::env::var_os("ProgramW6432").map(PathBuf::from),
         std::env::var_os("ProgramFiles(x86)").map(PathBuf::from),
         std::env::var_os("LOCALAPPDATA").map(PathBuf::from),
+        std::env::var_os("SystemDrive").map(PathBuf::from),
     ));
     locations
 }
@@ -183,6 +184,7 @@ fn windows_game_locations(
     program_w6432: Option<PathBuf>,
     program_files_x86: Option<PathBuf>,
     local_app_data: Option<PathBuf>,
+    system_drive: Option<PathBuf>,
 ) -> Vec<PathBuf> {
     let mut locations = Vec::new();
     for base in [program_files, program_w6432, program_files_x86].into_iter().flatten() {
@@ -196,6 +198,18 @@ fn windows_game_locations(
             local_app_data.join("Blizzard/StarCraft II"),
             local_app_data.join("Programs/StarCraft II"),
         ]);
+    }
+    if let Some(system_drive) = system_drive {
+        // `SystemDrive` normally is `C:`.  Joining a relative path directly
+        // would produce `C:Games` on Windows (relative to the current
+        // directory on that drive), so add the drive root explicitly.
+        let drive = system_drive.to_string_lossy();
+        let drive = drive.trim_end_matches(['\\', '/']);
+        let separator = std::path::MAIN_SEPARATOR;
+        let location = PathBuf::from(format!("{drive}{separator}Games{separator}StarCraft II"));
+        if !locations.contains(&location) {
+            locations.push(location);
+        }
     }
     locations
 }
@@ -441,7 +455,9 @@ pub fn run() {
             migrate_legacy_profile,
             resolve_game_directory,
             detect_game_directories,
-            detect_starcraft_profiles
+            detect_starcraft_profiles,
+            get_diagnostic_log_path,
+            open_diagnostic_log_directory
         ])
         .run(tauri::generate_context!())
         .expect("error while running CCM Reborn");

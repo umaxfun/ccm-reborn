@@ -31,6 +31,7 @@ export type LibraryContext = {
   selectedId: string;
   busy: boolean;
   gameDir: string;
+  installingCampaignId: string;
   isCurrentCatalogCampaign: (campaign: Campaign) => boolean;
 };
 
@@ -44,7 +45,7 @@ function renderLibraryDetail(campaign: Campaign, context: LibraryContext) {
       <p class="description">${escapeHtml(campaign.description)}</p><div class="metadata"><div><small>PACKAGE</small><strong>${formatBytes(campaign.package.size)}</strong></div><div><small>BRANCH</small><strong>${escapeHtml(campaign.requirements.campaign)}</strong></div><div><small>INTEGRITY</small><strong>SHA-256 verified</strong></div></div>
       <div class="tags">${campaign.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
       <section class="current-campaign"><div><small>CURRENT ${escapeHtml(campaign.requirements.campaign.toUpperCase())}</small><strong>${current ? escapeHtml(current.title) : "StarCraft II directory not selected"}</strong><span>${current ? `${escapeHtml(current.author)} · ${escapeHtml(current.version)}` : "Auto-detection runs when CCM Reborn starts."}</span></div><button class="ghost play" data-action="play" ${!context.inspection?.canLaunch || context.busy ? "disabled" : ""}>Play current</button></section>
-      <div class="install-row">${isCurrent ? `<button class="ghost" data-action="install" data-campaign="${escapeHtml(campaign.id)}" ${!context.gameDir || context.busy ? "disabled" : ""}>Repair installation</button>` : `<button class="primary install" data-action="install" data-campaign="${escapeHtml(campaign.id)}" ${!context.gameDir || context.busy ? "disabled" : ""}>Install v${escapeHtml(campaign.version)}</button>`}</div></div>`;
+      <div class="install-row">${isCurrent ? `<button class="ghost" data-action="install" data-campaign="${escapeHtml(campaign.id)}" ${!context.gameDir || context.busy ? "disabled" : ""}>${context.busy && context.installingCampaignId === campaign.id ? "Working…" : "Repair installation"}</button>` : `<button class="primary install" data-action="install" data-campaign="${escapeHtml(campaign.id)}" ${!context.gameDir || context.busy ? "disabled" : ""}>${context.busy && context.installingCampaignId === campaign.id ? "Working…" : `Install v${escapeHtml(campaign.version)}`}</button>`}</div></div>`;
 }
 
 export function renderLibrary(context: LibraryContext) {

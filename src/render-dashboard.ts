@@ -20,6 +20,7 @@ type DashboardContext = {
   busy: boolean;
   gameDir: string;
   profileDir: string;
+  installingCampaignId: string;
   isCurrentCatalogCampaign: (campaign: Campaign) => boolean;
 };
 
@@ -58,7 +59,7 @@ function renderSlot(slot: typeof slots[number], context: DashboardContext) {
           <article class="install-option">
             <div class="option-cover cover-${coverClass(campaign.id)}">${escapeHtml(campaign.title.slice(0, 1).toUpperCase())}</div>
             <div class="option-copy"><strong>${escapeHtml(campaign.title)}</strong><span>by ${escapeHtml(campaign.author)} · v${escapeHtml(campaign.version)} · ${formatBytes(campaign.package.size)}</span><span class="option-progress">${escapeHtml(resumeSummary(resumeFor(context.savedResumes, campaign.id)))}</span></div>
-            <button class="primary compact" data-action="install" data-campaign="${escapeHtml(campaign.id)}" ${!context.gameDir || context.busy ? "disabled" : ""}>Install</button>
+            <button class="primary compact" data-action="install" data-campaign="${escapeHtml(campaign.id)}" ${!context.gameDir || context.busy ? "disabled" : ""}>${context.busy && context.installingCampaignId === campaign.id ? "Working…" : "Install"}</button>
           </article>
         `).join("") : '<p class="no-options">No packages for this campaign in the current catalog.</p>'}
       </section>

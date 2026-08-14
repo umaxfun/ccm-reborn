@@ -1,9 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
 import "./styles.css";
 import type {
   Catalog, DryRunPlan, GameDirectoryCandidate, Inspection,
-  InstallResult, RestoreResult, SavedCampaignResume, StarcraftProfileCandidate,
+  InstallProgress, RestoreResult, SavedCampaignResume, StarcraftProfileCandidate,
 } from "./types";
 import { renderPlanDialog } from "./render-plan";
 import { renderLibrary } from "./render-library";
@@ -11,6 +12,8 @@ import { isCurrentCatalogCampaign } from "./domain";
 import { profileName, resumeFor } from "./resume";
 import { migrateLegacyProfile, renderLegacyMigration } from "./legacy-migration";
 import { renderDashboard } from "./render-dashboard";
+import { copyInstallDiagnostics, InstallFailure, openInstallLogFolder, renderInstallStatus } from "./install-status";
+import { applyCampaignInstall, planCampaignInstall } from "./install-flow";
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("Application root is missing.");
@@ -33,10 +36,36 @@ let messageKind: "neutral" | "success" | "error" = "neutral";
 let busy = false;
 let launchMessageTimer: number | undefined;
 let pendingPlan: DryRunPlan | null = null;
+let installActivity: InstallProgress | null = null;
+let activeInstallCampaignId = "";
+let diagnosticLogPath = "";
+let lastInstallFailure: InstallFailure | null = null;
+let settingsOpen = false;
+let settingsCatalogSourceDraft = catalogSource;
+let settingsProfileDirDraft = profileDir;
+
+function profileOptionLabel(path: string, index: number) {
+  const parts = path.split(/[\\/]/).filter(Boolean);
+  const profile = profileName(path);
+  const account = parts.at(-2);
+  return `${account ? `${account} / ` : ""}${profile}${index === 0 ? " (recent)" : ""}`;
+}
 
 const escapeHtml = (value: string) => value.replace(/[&<>'"]/g, (character) =>
-  ({ "&": "&amp;", "<": "&gt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]!,
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]!,
 );
+
+const installFlow = {
+  catalog: () => catalog, gameDir: () => gameDir, profileDir: () => profileDir,
+  pendingPlan: () => pendingPlan, activity: () => installActivity,
+  setBusy: (value: boolean) => { busy = value; },
+  setPendingPlan: (value: DryRunPlan | null) => { pendingPlan = value; },
+  setActivity: (value: InstallProgress | null) => { installActivity = value; },
+  setCampaignId: (value: string) => { activeInstallCampaignId = value; },
+  setFailure: (value: InstallFailure | null) => { lastInstallFailure = value; },
+  setMessage: (value: string, kind: "neutral" | "success" | "error") => { message = value; messageKind = kind; },
+  inspectDirectory, render,
+};
 
 function render() {
   root.innerHTML = `
@@ -60,16 +89,16 @@ function render() {
           <button class="ghost compact" data-action="refresh-catalog" ${busy || !catalogSource ? "disabled" : ""}>Check for updates</button><button class="settings-button" data-action="show-settings">Sources</button>
         </div>
       </header>
-      ${message ? `<section class="status ${messageKind}"><span>${messageKind === "success" ? "✓" : messageKind === "error" ? "!" : "i"}</span><p>${escapeHtml(message)}</p></section>` : ""}
+      ${renderInstallStatus({ message, messageKind, activity: installActivity, failure: lastInstallFailure, logPath: diagnosticLogPath })}
       ${renderLegacyMigration(catalog, savedResumes, profileDir, busy)}
-      ${page === "dashboard" ? renderDashboard({ catalog, inspection, savedResumes, busy, gameDir, profileDir, isCurrentCatalogCampaign: (campaign) => isCurrentCatalogCampaign(campaign, inspection) }) : renderLibrary({ catalog, inspection, selectedId, busy, gameDir, isCurrentCatalogCampaign: (campaign) => isCurrentCatalogCampaign(campaign, inspection) })}
+      ${page === "dashboard" ? renderDashboard({ catalog, inspection, savedResumes, busy, gameDir, profileDir, installingCampaignId: activeInstallCampaignId, isCurrentCatalogCampaign: (campaign) => isCurrentCatalogCampaign(campaign, inspection) }) : renderLibrary({ catalog, inspection, selectedId, busy, gameDir, installingCampaignId: activeInstallCampaignId, isCurrentCatalogCampaign: (campaign) => isCurrentCatalogCampaign(campaign, inspection) })}
     </main>
     <dialog id="settings-dialog">
       <form method="dialog" class="dialog-card">
         <button class="close" value="cancel" aria-label="Close">×</button>
         <p class="eyebrow">SOURCES</p><h2>Catalog & game location</h2>
         <label>Catalog source
-          <input id="catalog-source" spellcheck="false" value="${escapeHtml(catalogSource)}" placeholder="/path/to/catalog.json or https://…/catalog.json" />
+          <input id="catalog-source" spellcheck="false" value="${escapeHtml(settingsCatalogSourceDraft)}" placeholder="/path/to/catalog.json or https://…/catalog.json" />
           <small>Releases use the community cloud catalog by default. You can choose another HTTPS catalog or a local development catalog here.</small>
         </label>
         <div class="directory-actions"><button type="button" class="ghost" data-action="use-cloud-catalog">Use community cloud</button>${import.meta.env.DEV ? '<button type="button" class="ghost" data-action="use-local-catalog">Use local dev catalog</button>' : ""}</div>
@@ -85,9 +114,10 @@ function render() {
         <label>StarCraft II profile
           <select id="profile-directory">
             <option value="">Choose before applying an install…</option>
-            ${profileCandidates.map((profile, index) => `<option value="${escapeHtml(profile.path)}" ${profile.path === profileDir ? "selected" : ""}>Profile ${escapeHtml(profileName(profile.path))}${index === 0 ? " · most recently active" : ""} — ${escapeHtml(profile.label)}</option>`).join("")}
+            ${profileCandidates.map((profile, index) => `<option value="${escapeHtml(profile.path)}" ${profile.path === settingsProfileDirDraft ? "selected" : ""}>${escapeHtml(profileOptionLabel(profile.path, index))}</option>`).join("")}
           </select>
           <small>This is the single account profile whose bank, saves, and campaign progress CCM may switch. The first detected profile is selected automatically; choose the other one only if that is the account you play on.</small>
+          ${settingsProfileDirDraft ? `<small class="profile-path">${escapeHtml(settingsProfileDirDraft)}</small>` : ""}
         </label>
         <div class="directory-actions">
           <button type="button" class="ghost" data-action="choose-profile">Choose profile…</button>
@@ -102,6 +132,8 @@ function render() {
     ${pendingPlan ? renderPlanDialog(pendingPlan, profileDir, busy) : ""}
   `;
   bindEvents();
+  const settingsDialog = document.querySelector<HTMLDialogElement>("#settings-dialog");
+  if (settingsOpen && settingsDialog && !settingsDialog.open) settingsDialog.showModal();
   const planDialog = document.querySelector<HTMLDialogElement>("#plan-dialog");
   if (planDialog && !planDialog.open) planDialog.showModal();
 }
@@ -120,15 +152,27 @@ function bindEvents() {
     });
   });
   document.querySelectorAll<HTMLButtonElement>("[data-action='show-settings']").forEach((button) => {
-    button.addEventListener("click", () => document.querySelector<HTMLDialogElement>("#settings-dialog")?.showModal());
+    button.addEventListener("click", () => showSettings());
+  });
+  document.querySelector<HTMLDialogElement>("#settings-dialog")?.addEventListener("close", () => {
+    settingsOpen = false;
+  });
+  const catalogSourceInput = document.querySelector<HTMLInputElement>("#catalog-source");
+  catalogSourceInput?.addEventListener("input", () => {
+    settingsCatalogSourceDraft = catalogSourceInput.value;
+  });
+  const profileDirectorySelect = document.querySelector<HTMLSelectElement>("#profile-directory");
+  profileDirectorySelect?.addEventListener("change", () => {
+    settingsProfileDirDraft = profileDirectorySelect.value;
   });
   document.querySelector<HTMLButtonElement>("[data-action='save-settings']")?.addEventListener("click", (event) => {
     event.preventDefault();
-    catalogSource = document.querySelector<HTMLInputElement>("#catalog-source")?.value.trim() || defaultCatalog;
-    profileDir = document.querySelector<HTMLSelectElement>("#profile-directory")?.value.trim() ?? profileDir;
+    catalogSource = settingsCatalogSourceDraft.trim() || defaultCatalog;
+    profileDir = settingsProfileDirDraft.trim();
     localStorage.setItem("ccm-catalog-source", catalogSource);
     if (profileDir) localStorage.setItem("ccm-profile-directory", profileDir);
     else localStorage.removeItem("ccm-profile-directory");
+    settingsOpen = false;
     document.querySelector<HTMLDialogElement>("#settings-dialog")?.close();
     void loadCatalog();
   });
@@ -140,15 +184,17 @@ function bindEvents() {
   document.querySelector<HTMLButtonElement>("[data-action='choose-profile']")?.addEventListener("click", () => void chooseProfileDirectory());
   document.querySelector<HTMLButtonElement>("[data-action='detect-profiles']")?.addEventListener("click", () => void refreshProfiles(true));
   document.querySelectorAll<HTMLButtonElement>("[data-action='install']").forEach((button) => {
-    button.addEventListener("click", () => void installCampaign(button.dataset.campaign ?? ""));
+    button.addEventListener("click", () => void planCampaignInstall(installFlow, button.dataset.campaign ?? ""));
   });
   document.querySelectorAll<HTMLButtonElement>("[data-action='close-plan']").forEach((button) => {
     button.addEventListener("click", () => {
       pendingPlan = null;
+      installActivity = null;
+      activeInstallCampaignId = "";
       render();
     });
   });
-  document.querySelector<HTMLButtonElement>("[data-action='apply-plan']")?.addEventListener("click", () => void applyPendingPlan());
+  document.querySelector<HTMLButtonElement>("[data-action='apply-plan']")?.addEventListener("click", () => void applyCampaignInstall(installFlow));
   document.querySelectorAll<HTMLButtonElement>("[data-action='play']").forEach((button) => button.addEventListener("click", () => void playCurrentCampaign()));
   document.querySelectorAll<HTMLButtonElement>("[data-action='restore']").forEach((button) => {
     button.addEventListener("click", () => void restoreOriginals(button.dataset.target ?? ""));
@@ -156,10 +202,45 @@ function bindEvents() {
   document.querySelectorAll<HTMLButtonElement>("[data-action='migrate-legacy']").forEach((button) => {
     button.addEventListener("click", () => void migrateLegacySnapshot(button.dataset.campaign ?? ""));
   });
+  document.querySelector<HTMLButtonElement>("[data-action='copy-diagnostics']")?.addEventListener("click", () => void copyDiagnostics());
+  document.querySelector<HTMLButtonElement>("[data-action='open-log-folder']")?.addEventListener("click", () => void openDiagnosticLogFolder());
+}
+
+function showSettings() {
+  settingsCatalogSourceDraft = catalogSource;
+  settingsProfileDirDraft = profileDir;
+  settingsOpen = true;
+  const dialog = document.querySelector<HTMLDialogElement>("#settings-dialog");
+  if (dialog && !dialog.open) dialog.showModal();
+}
+
+async function copyDiagnostics() {
+  if (!lastInstallFailure) return;
+  try {
+    await copyInstallDiagnostics(lastInstallFailure, diagnosticLogPath);
+    message = "Diagnostics copied to the clipboard.";
+    messageKind = "success";
+  } catch {
+    message = "Could not copy diagnostics. The log path is shown below.";
+    messageKind = "error";
+  }
+  render();
+}
+
+async function openDiagnosticLogFolder() {
+  try {
+    await openInstallLogFolder();
+  } catch (error) {
+    message = String(error);
+    messageKind = "error";
+    render();
+  }
 }
 
 function useCatalogSource(source: string) {
   catalogSource = source;
+  settingsCatalogSourceDraft = source;
+  settingsOpen = false;
   localStorage.setItem("ccm-catalog-source", catalogSource);
   document.querySelector<HTMLDialogElement>("#settings-dialog")?.close();
   void loadCatalog();
@@ -190,6 +271,7 @@ async function chooseProfileDirectory() {
   const selected = await open({ directory: true, multiple: false, title: "Choose the StarCraft II account profile" });
   if (typeof selected !== "string") return;
   profileDir = selected;
+  settingsProfileDirDraft = profileDir;
   localStorage.setItem("ccm-profile-directory", profileDir);
   if (!profileCandidates.some((profile) => profile.path === profileDir)) {
     profileCandidates = [...profileCandidates, { path: profileDir, label: profileDir }];
@@ -208,6 +290,7 @@ async function refreshProfiles(showMessage = false) {
     // change it there before applying anything.
     if (!profileDir && profileCandidates.length) {
       profileDir = profileCandidates[0].path;
+      if (!settingsProfileDirDraft) settingsProfileDirDraft = profileDir;
       localStorage.setItem("ccm-profile-directory", profileDir);
     }
     if (profileDir && !profileCandidates.some((profile) => profile.path === profileDir)) {
@@ -230,6 +313,7 @@ async function refreshProfiles(showMessage = false) {
 function setGameDirectory(game: GameDirectoryCandidate) {
   if (gameDir !== game.path) {
     profileDir = "";
+    settingsProfileDirDraft = "";
     localStorage.removeItem("ccm-profile-directory");
   }
   gameDir = game.path;
@@ -302,69 +386,6 @@ async function inspectDirectory() {
   if (inspection.recoveryPerformed) {
     message = "A previously interrupted install was restored safely.";
     messageKind = "success";
-  }
-}
-
-async function installCampaign(campaignId: string) {
-  const campaign = catalog?.campaigns.find((item) => item.id === campaignId);
-  if (!campaign || !gameDir) return;
-  busy = true;
-  pendingPlan = null;
-  message = `Planning a safe dry-run for ${campaign.title}…`;
-  messageKind = "neutral";
-  render();
-  try {
-    const result = await invoke<DryRunPlan>("plan_campaign_install", {
-      request: { campaignId: campaign.id, title: campaign.title, author: campaign.author, version: campaign.version, profileDir: profileDir || null, archiveSource: campaign.package.source, sha256: campaign.package.sha256, packageSize: campaign.package.size, gameDir },
-    });
-    pendingPlan = result;
-    message = `Dry-run complete for ${campaign.title}. No files were changed.`;
-    messageKind = "success";
-  } catch (error) {
-    message = String(error);
-    messageKind = "error";
-  } finally {
-    busy = false;
-    render();
-  }
-}
-
-async function applyPendingPlan() {
-  if (!pendingPlan || !gameDir || !profileDir) return;
-  const campaign = catalog?.campaigns.find((item) => item.id === pendingPlan?.campaignId);
-  if (!campaign) return;
-  const confirmed = window.confirm(
-    `Apply ${campaign.title} v${campaign.version}? StarCraft II must be fully closed. CCM will use only the selected profile and keep rollback snapshots for both profile and campaign files.`,
-  );
-  if (!confirmed) return;
-  busy = true;
-  pendingPlan = null;
-  message = `Applying ${campaign.title}; staging profile and campaign changes…`;
-  messageKind = "neutral";
-  render();
-  try {
-    const result = await invoke<InstallResult>("install_campaign", {
-      request: {
-        campaignId: campaign.id,
-        title: campaign.title,
-        author: campaign.author,
-        version: campaign.version,
-        profileDir,
-        archiveSource: campaign.package.source,
-        sha256: campaign.package.sha256,
-        packageSize: campaign.package.size,
-        gameDir,
-      },
-    });
-    message = `Installed ${result.title} v${result.version} (${result.filesInstalled} files).`;
-    messageKind = "success";
-    await inspectDirectory();
-  } catch (error) {
-    message = String(error);
-    messageKind = "error";
-  } finally {
-    busy = false;
-    render();
   }
 }
 
@@ -449,6 +470,11 @@ async function playCurrentCampaign() {
 }
 
 async function boot() {
+  try {
+    diagnosticLogPath = await invoke<string>("get_diagnostic_log_path");
+  } catch {
+    // The installation flow remains usable when the user's home directory is unavailable.
+  }
   if (!gameDir) {
     try {
       const locations = await invoke<GameDirectoryCandidate[]>("detect_game_directories");
@@ -463,6 +489,13 @@ async function boot() {
 }
 
 render();
+void listen<InstallProgress>("install-progress", ({ payload }) => {
+  if (!busy) return;
+  installActivity = payload;
+  message = payload.message;
+  messageKind = "neutral";
+  render();
+});
 void boot();
 window.addEventListener("focus", () => {
   if (!gameDir || busy) return;

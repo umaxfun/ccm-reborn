@@ -1,4 +1,5 @@
 include!("legacy/part01_types.rs");
+include!("legacy/part16_install_progress.rs");
 include!("legacy/part02_inspection.rs");
 include!("legacy/part03_plan.rs");
 include!("legacy/part04_profile_plan.rs");

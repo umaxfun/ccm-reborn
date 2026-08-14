@@ -16,9 +16,21 @@
     "version:bump": "node scripts/bump-version.mjs",
     "catalog:publish-initial": "node scripts/publish-initial-catalog.mjs",
     "catalog:publish": "bash scripts/publish-campaign.sh",
-    "catalog:smoke": "node scripts/check-cloud-catalog.mjs"
+    "catalog:smoke": "node scripts/check-cloud-catalog.mjs",
+    "cms:schema": "node --env-file=.env scripts/hygraph/001-initial-schema.mjs",
+    "cms:import": "node --env-file=.env scripts/hygraph/import-production-catalog.mjs",
+    "cms:generate": "node --env-file=.env scripts/hygraph/generate-production-catalog.mjs",
+    "cms:verify-local": "node scripts/hygraph/verify-local-roundtrip.mjs",
+    "cms:editorial:check": "node scripts/hygraph/check-campaign-editorial.mjs",
+    "cms:editorial:import": "node --env-file=.env scripts/hygraph/import-campaign-editorial.mjs",
+    "discord:inventory": "node --env-file=.env scripts/discord/export-descriptions.mjs --list",
+    "discord:export": "node --env-file=.env scripts/discord/export-descriptions.mjs",
+    "discord:export-mapped": "node --env-file=.env scripts/discord/export-descriptions.mjs --from-source-map",
+    "discord:plan": "node scripts/discord/build-campaign-channel-plan.mjs",
+    "discord:map:check": "node scripts/discord/check-campaign-source-map.mjs"
   },
   "devDependencies": {
+    "@hygraph/management-sdk": "^1.6.0",
     "@tauri-apps/cli": "^2.0.0",
     "typescript": "^5.7.0",
     "vite": "^6.0.0"

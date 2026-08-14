@@ -135,18 +135,27 @@ fn load_catalog_blocking(source: String) -> Result<LoadedCatalog, String> {
 }
 
 #[tauri::command]
-async fn install_campaign(request: InstallRequest) -> Result<InstallResult, String> {
+async fn install_campaign(window: tauri::Window, request: InstallRequest) -> Result<InstallResult, String> {
+    let reporter = ProgressReporter::new(window);
     tauri::async_runtime::spawn_blocking(move || {
         let root = require_desktop_game_root(&request.game_dir)?;
         let mut request = request;
         request.game_dir = root.display().to_string();
-        install_campaign_blocking(request)
+        install_campaign_with_progress(request, Some(&reporter))
     })
         .await
         .map_err(|error| format!("Installation worker failed: {error}"))?
 }
 
 fn install_campaign_blocking(request: InstallRequest) -> Result<InstallResult, String> {
+    install_campaign_with_progress(request, None)
+}
+
+fn install_campaign_with_progress(
+    request: InstallRequest,
+    reporter: Option<&ProgressReporter>,
+) -> Result<InstallResult, String> {
+    reporter.map(|reporter| reporter.status("preparing-install", "Preparing installation…"));
     validate_campaign_id(&request.campaign_id)?;
     if request.title.trim().is_empty() {
         return Err("Campaign title is required.".into());
@@ -163,14 +172,24 @@ fn install_campaign_blocking(request: InstallRequest) -> Result<InstallResult, S
     recover_interrupted_install(&root)?;
 
     let expected_hash = normalize_sha256(&request.sha256)?;
-    let archive = acquire_archive(&request.archive_source, &expected_hash, request.package_size)?;
+    let archive = match acquire_archive(&request.archive_source, &expected_hash, request.package_size, reporter) {
+        Ok(archive) => archive,
+        Err(error) => {
+            reporter.map(|reporter| reporter.failed("download-failed", &error));
+            return Err(error);
+        }
+    };
     validate_declared_package_size(request.package_size, fs::metadata(&archive.path).map_err(io_error)?.len())?;
     // `install_archive` validates and stages the new package before it touches
     // the old install. This prevents a bad download from deleting the current
     // campaign first.
-    let result = install_archive(&root, &request, &archive.path, &expected_hash);
+    reporter.map(|reporter| reporter.status("staging", "Verifying and staging package files…"));
+    let result = install_archive(&root, &request, &archive.path, &expected_hash, reporter);
     if archive.is_temporary {
         let _ = fs::remove_file(&archive.path);
+    }
+    if let Err(error) = &result {
+        reporter.map(|reporter| reporter.failed("install-failed", error));
     }
     result
 }

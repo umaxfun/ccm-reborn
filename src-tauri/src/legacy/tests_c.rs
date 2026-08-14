@@ -88,10 +88,12 @@ fn windows_support64_layout_is_detected_and_launchable() {
         Some(PathBuf::from("C:/Program Files")),
         Some(PathBuf::from("C:/Program Files (x86)")),
         Some(PathBuf::from("C:/Users/test/AppData/Local")),
+        Some(PathBuf::from("C:")),
     );
     assert!(locations.contains(&PathBuf::from("C:/Program Files/StarCraft II")));
     assert!(locations.contains(&PathBuf::from("C:/Program Files (x86)/StarCraft II")));
     assert!(locations.contains(&PathBuf::from("C:/Users/test/AppData/Local/Blizzard/StarCraft II")));
+    assert!(locations.contains(&PathBuf::from("C:/Games/StarCraft II")));
     let program_files_location = PathBuf::from("C:/Program Files/StarCraft II");
     assert_eq!(locations.iter().filter(|path| *path == &program_files_location).count(), 1);
 

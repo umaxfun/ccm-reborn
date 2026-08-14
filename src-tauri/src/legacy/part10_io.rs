@@ -12,9 +12,15 @@ impl Drop for AcquiredArchive {
     }
 }
 
-fn acquire_archive(source: &str, expected_sha256: &str, expected_size: Option<u64>) -> Result<AcquiredArchive, String> {
+fn acquire_archive(
+    source: &str,
+    expected_sha256: &str,
+    expected_size: Option<u64>,
+    reporter: Option<&ProgressReporter>,
+) -> Result<AcquiredArchive, String> {
     let source = source.trim();
     if !source.starts_with("https://") {
+        reporter.map(|reporter| reporter.status("checking-package", "Checking local package…"));
         let path = PathBuf::from(source);
         if !path.is_file() {
             return Err("The local package declared in catalog.json was not found.".into());
@@ -27,11 +33,12 @@ fn acquire_archive(source: &str, expected_sha256: &str, expected_size: Option<u6
     }
     if let Some(expected_size) = expected_size {
         return Ok(AcquiredArchive {
-            path: cache_remote_archive(source, expected_sha256, expected_size)?,
+            path: cache_remote_archive(source, expected_sha256, expected_size, reporter)?,
             is_temporary: false,
             checksum_verified: true,
         });
     }
+    reporter.map(|reporter| reporter.status("downloading", "Downloading package from cloud…"));
     let path = download_archive(source)?;
     Ok(AcquiredArchive {
         path,
@@ -47,6 +54,7 @@ fn download_archive(url: &str) -> Result<PathBuf, String> {
         .build()
         .map_err(|error| format!("Could not create download client: {error}"))?
         .get(url)
+        .header(reqwest::header::ACCEPT_ENCODING, "identity")
         .send()
         .map_err(|error| format!("Could not download package: {error}"))?
         .error_for_status()
@@ -60,7 +68,8 @@ fn download_archive(url: &str) -> Result<PathBuf, String> {
     let path = temporary_dir.join(format!("{}.zip", Uuid::new_v4()));
     let mut output = File::create(&path).map_err(io_error)?;
     let mut limited = response.take(MAX_ARCHIVE_BYTES + 1);
-    let copied = io::copy(&mut limited, &mut output).map_err(io_error)?;
+    let copied = io::copy(&mut limited, &mut output)
+        .map_err(|error| format!("Could not read the cloud download response: {error}. No files were changed."))?;
     output.sync_all().map_err(io_error)?;
     if copied > MAX_ARCHIVE_BYTES {
         let _ = fs::remove_file(&path);

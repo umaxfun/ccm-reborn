@@ -1,16 +1,25 @@
 #[tauri::command]
-async fn plan_campaign_install(request: InstallRequest) -> Result<DryRunPlan, String> {
+async fn plan_campaign_install(window: tauri::Window, request: InstallRequest) -> Result<DryRunPlan, String> {
+    let reporter = ProgressReporter::new(window);
     tauri::async_runtime::spawn_blocking(move || {
         let root = require_desktop_game_root(&request.game_dir)?;
         let mut request = request;
         request.game_dir = root.display().to_string();
-        plan_campaign_install_blocking(request)
+        plan_campaign_install_with_progress(request, Some(&reporter))
     })
         .await
         .map_err(|error| format!("Dry-run worker failed: {error}"))?
 }
 
 fn plan_campaign_install_blocking(request: InstallRequest) -> Result<DryRunPlan, String> {
+    plan_campaign_install_with_progress(request, None)
+}
+
+fn plan_campaign_install_with_progress(
+    request: InstallRequest,
+    reporter: Option<&ProgressReporter>,
+) -> Result<DryRunPlan, String> {
+    reporter.map(|reporter| reporter.status("preparing-plan", "Preparing a safe installation plan…"));
     validate_campaign_id(&request.campaign_id)?;
     if request.title.trim().is_empty() {
         return Err("Campaign title is required.".into());
@@ -30,8 +39,16 @@ fn plan_campaign_install_blocking(request: InstallRequest) -> Result<DryRunPlan,
         return Err("Choose the exact StarCraft II account profile before reviewing a live install.".into());
     }
     let expected_sha256 = normalize_sha256(&request.sha256)?;
-    let archive = acquire_archive(&request.archive_source, &expected_sha256, request.package_size)?;
+    let archive = match acquire_archive(&request.archive_source, &expected_sha256, request.package_size, reporter) {
+        Ok(archive) => archive,
+        Err(error) => {
+            reporter.map(|reporter| reporter.failed("download-failed", &error));
+            return Err(error);
+        }
+    };
     let archive_path = &archive.path;
+
+    reporter.map(|reporter| reporter.status("verifying-package", "Verifying package integrity…"));
 
     let archive_size = fs::metadata(&archive_path).map_err(io_error)?.len();
     validate_declared_package_size(request.package_size, archive_size)?;
@@ -96,7 +113,9 @@ fn plan_campaign_install_blocking(request: InstallRequest) -> Result<DryRunPlan,
     } else {
         "fresh-install"
     };
-    let operation_id = Uuid::new_v4().to_string();
+    let operation_id = reporter
+        .map(|reporter| reporter.operation_id().to_string())
+        .unwrap_or_else(|| Uuid::new_v4().to_string());
     let profile = plan_profile_transition(
         &root,
         &package.target_path,
@@ -218,7 +237,7 @@ fn plan_campaign_install_blocking(request: InstallRequest) -> Result<DryRunPlan,
     if !dependency_roots.is_empty() {
         warnings.push("Package dependencies will be placed under the game Mods directory.".into());
     }
-    Ok(DryRunPlan {
+    let plan = DryRunPlan {
         operation_id,
         campaign_id: request.campaign_id,
         title: request.title,
@@ -251,5 +270,7 @@ fn plan_campaign_install_blocking(request: InstallRequest) -> Result<DryRunPlan,
         bank_plans: profile.bank_plans,
         file_changes,
         warnings,
-    })
+    };
+    reporter.map(|reporter| reporter.status("plan-ready", "Safe plan is ready. No game files were changed."));
+    Ok(plan)
 }
