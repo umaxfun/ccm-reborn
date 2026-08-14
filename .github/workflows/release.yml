@@ -55,6 +55,10 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ runner.os }}
+          workspaces: src-tauri -> target
       - run: npm ci
       - run: npm run tauri:mac:universal
       - uses: actions/upload-artifact@v4
@@ -76,6 +80,10 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ runner.os }}
+          workspaces: src-tauri -> target
       - run: npm ci
       - run: npm run tauri:win
       - uses: actions/upload-artifact@v4
@@ -106,6 +114,10 @@ jobs:
             libssl-dev \
             libwebkit2gtk-4.1-dev \
             libxdo-dev
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ runner.os }}
+          workspaces: src-tauri -> target
       - run: npm ci
       - run: npm run tauri:linux
       - uses: actions/upload-artifact@v4

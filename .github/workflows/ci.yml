@@ -19,6 +19,10 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ runner.os }}
+          workspaces: src-tauri -> target
       - name: Install Linux desktop build dependencies
         if: runner.os == 'Linux'
         run: |
