@@ -136,7 +136,7 @@ const output = {
     guildId: GUILD_ID,
     eligibleChannelCount: eligibleChannels.length,
   },
-  instructions: "All matches are suggestions only. Move approved pairs into the committed mapping before exporting messages.",
+  instructions: "All matches are suggestions only. Review approved pairs in CMS after Bronze ingestion; do not treat this file as a canonical source mapping.",
   mappings,
 };
 await mkdir(dirname(OUTPUT_PATH), { recursive: true });

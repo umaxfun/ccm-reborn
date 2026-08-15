@@ -1,0 +1,4 @@
+interface:
+  display_name: "Discord CMS Content"
+  short_description: "Collect and draft Discord mod content"
+  default_prompt: "Use $discord-cms-content to collect Discord evidence and prepare a Silver draft for review."

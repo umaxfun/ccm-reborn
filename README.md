@@ -279,44 +279,15 @@ npm run discord:plan
 
 Review `work/discord-campaign-channel-plan.json` and select campaign/channel
 pairs explicitly. A normal channel can then be fetched by its ID with
-`npm run discord:export -- --channel <channel-id>`. The legacy `--thread` form
-remains available for individual forum posts.
+`npm run discord:export -- --channel <channel-id>`. The `--thread` form remains
+available for individual forum posts.
 
-The reviewed source map lives in
-`scripts/discord/campaign-source-map.json`. It maps every current production
-campaign to a Discord channel or forum thread, with evidence marked as
-`content-verified`, `name-match`, or `shared-reference`. Check that it still
-covers the production catalog after any edit:
-
-```sh
-npm run discord:map:check
-```
-
-Once that source map has been reviewed, export exactly its sources (deduplicating
-shared channels while retaining the campaign-to-source mapping) with:
-
-```sh
-npm run discord:export-mapped
-```
-
-The reviewed English card copy and controlled classification live in
-`scripts/hygraph/campaign-editorial.json`. It is deliberately separate from the
-package catalog: it can evolve without changing a package URL, version, or
-checksum. Validate that it covers every current campaign, uses only controlled
-tags, and still has a reviewed Discord source for each entry:
-
-```sh
-npm run cms:editorial:check
-```
-
-Preview the CMS mutation without writing, then create Hygraph drafts only when
-the copy is approved. Publishing is an explicit third step:
-
-```sh
-npm run cms:editorial:import
-npm run cms:editorial:import -- --apply
-npm run cms:editorial:import -- --apply --publish
-```
+The authoritative mapping and editorial data live in Hygraph: append-only
+Bronze `SourceFeed`/`SourceObservation` records retain the evidence, while
+Silver `ModDossier` records hold the selected source context, draft copy,
+classification, version, download link, and review status. A source candidate
+is not public content until a person reviews Silver and deliberately promotes
+it through the Gold generation gate.
 
 ## Checks
 

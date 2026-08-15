@@ -8,3 +8,5 @@ dev-catalog/packages/*
 .wrangler/
 .toolcache/*
 .wine-check*/
+.tmp
+reviews
