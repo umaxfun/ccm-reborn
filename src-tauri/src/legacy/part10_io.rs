@@ -191,6 +191,18 @@ fn safe_game_path(root: &Path, relative: &Path) -> Result<PathBuf, String> {
                 return Err(format!("Refusing to use symlinked game path {}.", current.display()));
             }
             Ok(metadata) if current != root.join(&relative) && !metadata.is_dir() => {
+                // A community map named `*.SC2Map` / `*.SC2Mod` may be shipped
+                // either as an unpacked directory or as a single archive file.
+                // A recorded path can therefore point *inside* an entry that
+                // currently exists on disk as a plain file (a differently-packed
+                // map of the same name). That is not a path escape: the caller
+                // owns this map unit and clears/replaces it wholesale before
+                // writing. A regular file has no children, so no symlink can
+                // hide beneath it and every ancestor above was already checked
+                // above -- resolve to the intended path and stop descending.
+                if is_wol_owned_asset_directory(name) {
+                    return Ok(root.join(&relative));
+                }
                 return Err(format!("Game path ancestor {} is not a directory.", current.display()));
             }
             Ok(_) => {}

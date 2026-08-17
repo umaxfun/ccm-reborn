@@ -468,3 +468,62 @@
         assert!(!pending_install_path(&game_dir).exists());
         let _ = fs::remove_dir_all(sandbox);
     }
+
+    #[test]
+    fn install_over_a_map_previously_backed_up_as_a_folder_but_now_a_file_does_not_crash() {
+        // Regression for the "Lings of Wiberty" crash: a previous mod shipped
+        // `tvalerian02b.SC2Map` as an unpacked FOLDER (so CCM recorded its
+        // originals as folder-form files), while the currently installed mod
+        // shipped the same map name as a single FILE. Installing yet another
+        // campaign walked the folder-form originals and hit
+        // "Game path ancestor ... is not a directory". It must now succeed.
+        let sandbox = std::env::temp_dir().join(format!("ccm-shape-mismatch-{}", Uuid::new_v4()));
+        let game_dir = sandbox.join("game");
+        let wol = game_dir.join("Maps/Campaign");
+        // Pre-existing map shipped as an unpacked directory.
+        fs::create_dir_all(wol.join("mission.SC2Map")).unwrap();
+        fs::write(wol.join("mission.SC2Map/DocumentHeader"), b"vanilla-folder-map").unwrap();
+
+        let make_archive = |path: &Path, name: &str, map: &str, bytes: &[u8]| {
+            let file = File::create(path).unwrap();
+            let mut archive = ZipWriter::new(file);
+            let options = SimpleFileOptions::default();
+            archive.start_file(format!("{name}/metadata.txt"), options).unwrap();
+            archive
+                .write_all(format!("title={name}\nauthor=Test\ncampaign=WoL\nversion=1\n").as_bytes())
+                .unwrap();
+            archive.start_file(format!("{name}/{map}"), options).unwrap();
+            archive.write_all(bytes).unwrap();
+            archive.finish().unwrap();
+        };
+        let request = |archive: &Path, id: &str| InstallRequest {
+            campaign_id: id.into(),
+            title: id.into(),
+            author: "Test".into(),
+            version: "1.0".into(),
+            profile_dir: None,
+            archive_source: archive.display().to_string(),
+            sha256: sha256_file(archive).unwrap(),
+            package_size: None,
+            game_dir: game_dir.display().to_string(),
+        };
+
+        // Mod A repacks the same map name as a single FILE. After this the
+        // managed state holds folder-form originals AND a file-form install
+        // for `mission.SC2Map` -- exactly the conflicting shapes.
+        let a = sandbox.join("a.zip");
+        make_archive(&a, "ModA", "mission.SC2Map", b"mod-a-file-map");
+        install_campaign_blocking(request(&a, "mod-a")).unwrap();
+        assert!(wol.join("mission.SC2Map").is_file(), "mod A installed the map as a file");
+
+        // Installing another WoL campaign triggers the restore of mod A, which
+        // walks the folder-form originals through safe_game_path. This is the
+        // step that used to crash.
+        let b = sandbox.join("b.zip");
+        make_archive(&b, "ModB", "nightmare.SC2Map", b"mod-b-file-map");
+        install_campaign_blocking(request(&b, "mod-b")).unwrap();
+
+        assert!(wol.join("nightmare.SC2Map").is_file(), "mod B installed cleanly");
+        assert!(!wol.join("mission.SC2Map").exists(), "mod A's map was cleared before mod B");
+        let _ = fs::remove_dir_all(sandbox);
+    }
