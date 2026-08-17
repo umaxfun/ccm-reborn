@@ -415,16 +415,15 @@ fn extract_ccm_package(
         if let Some(parent) = staged_path.parent() {
             fs::create_dir_all(parent).map_err(io_error)?;
         }
-        let mut output = File::create(&staged_path).map_err(io_error)?;
-        let copied = io::copy(&mut source, &mut output).map_err(io_error)?;
-        if copied != source.size() {
+        let expected_size = source.size();
+        let (copied, sha256) = write_reader_hashed(&mut source, &staged_path)?;
+        if copied != expected_size {
             return Err(format!("Could not fully extract {source_name}."));
         }
-        output.sync_all().map_err(io_error)?;
         staged_files.push(StagedFile {
             destination: destination_string,
             source: source_name,
-            sha256: sha256_file(&staged_path)?,
+            sha256,
             path: staged_path,
         });
     }

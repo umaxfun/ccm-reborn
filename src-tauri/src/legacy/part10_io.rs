@@ -154,7 +154,35 @@ fn copy_file(from: &Path, to: &Path) -> Result<(), String> {
     let mut source = File::open(from).map_err(io_error)?;
     let mut target = File::create(to).map_err(io_error)?;
     io::copy(&mut source, &mut target).map_err(io_error)?;
-    target.sync_all().map_err(io_error)
+    // No per-file fsync: an install can copy hundreds of small campaign files
+    // across staging/backup/restore/replace, and a synchronous flush per file
+    // dominates the runtime. Crash-safety comes from the pending-install
+    // journal (fsynced) plus recovery, which re-derives the slot from staging
+    // and backups, not from each game file being individually durable.
+    Ok(())
+}
+
+/// Stream `reader` into `to`, returning `(bytes_written, sha256)`. Hashing
+/// while copying avoids a second full read of every extracted file, and, like
+/// `copy_file`, it does not fsync per file (see the note there).
+fn write_reader_hashed(mut reader: impl Read, to: &Path) -> Result<(u64, String), String> {
+    if let Some(parent) = to.parent() {
+        fs::create_dir_all(parent).map_err(io_error)?;
+    }
+    let mut target = File::create(to).map_err(io_error)?;
+    let mut hasher = Sha256::new();
+    let mut buffer = [0_u8; 64 * 1024];
+    let mut total = 0_u64;
+    loop {
+        let read = reader.read(&mut buffer).map_err(io_error)?;
+        if read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..read]);
+        target.write_all(&buffer[..read]).map_err(io_error)?;
+        total = total.saturating_add(read as u64);
+    }
+    Ok((total, hex::encode(hasher.finalize())))
 }
 
 
