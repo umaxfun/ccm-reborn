@@ -7,6 +7,37 @@ export type Campaign = {
   tags: string[];
   requirements: { campaign: string };
   package: { source: string; sha256: string; size: number };
+  // Set only for mods the player added from their own computer. Cloud entries
+  // leave both undefined so nothing about the existing catalogue changes.
+  isLocal?: boolean;
+  addedAt?: number;
+};
+
+export type LocalModEntry = {
+  id: string;
+  title: string;
+  author: string;
+  version: string;
+  description: string;
+  campaign: string;
+  archiveFile: string;
+  archivePath: string;
+  sha256: string;
+  size: number;
+  addedAt: number;
+};
+
+export type LocalPackageInspection = {
+  title: string;
+  author: string;
+  version: string;
+  description: string;
+  campaign: string;
+  targetPath: string;
+  sha256: string;
+  size: number;
+  files: number;
+  suggestedId: string;
 };
 
 export type Catalog = {

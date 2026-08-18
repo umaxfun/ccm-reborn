@@ -225,3 +225,30 @@ main { min-width: 0; }
   border-top: 1px solid #24394b;
   background: #0d141e;
 }
+
+/* Local mods: a player's own archive listed next to the cloud entries. The
+   pill is deliberately quieter than CURRENT -- it says where the package came
+   from, not that it is active. The row keeps the same three-column grid as
+   every other option so all Install buttons stay on one vertical line.
+   The title line is a flex row: `.option-copy strong` clips its overflow, so a
+   bordered pill sitting on the text baseline would lose its top edge. */
+.option-copy strong { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; }
+.option-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.local-pill { flex: 0 0 auto; padding: 1px 4px; border: 1px solid #3f6480; border-radius: 3px; color: #8cbdda; font-size: 8px; font-weight: 700; letter-spacing: .09em; line-height: 1.5; }
+.option-remove { margin-top: 1px; }
+.link-action { padding: 0; border: 0; background: none; color: #6f8799; font-size: 10px; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.link-action:hover:not(:disabled) { color: #9fd4f2; }
+.link-action:disabled { color: #4a5b69; cursor: default; text-decoration: none; }
+.install-option.highlighted { background: linear-gradient(90deg, #13252f, transparent 78%); }
+@media (prefers-reduced-motion: no-preference) {
+  .install-option.highlighted { animation: local-mod-added 1.1s ease-out; }
+  @keyframes local-mod-added { from { background-color: #1b3d4e; } to { background-color: transparent; } }
+}
+#add-local-mod-dialog .metadata { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+#add-local-mod-dialog .metadata > div { display: grid; gap: 4px; padding: 10px; border: 1px solid #29445b; border-radius: 6px; background: #0a151f; }
+#add-local-mod-dialog .metadata small { color: #7591a8; font-size: 9px; letter-spacing: .1em; }
+#add-local-mod-dialog .metadata strong { color: #dff5ff; font-size: 12px; }
+.dialog-note { margin: 0; color: #8fa7b9; font-size: 11px; line-height: 1.5; }
+.dialog-note code, .dialog-hash code { color: #b8efff; font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+.dialog-hash { display: grid; gap: 4px; margin: 0; }
+.dialog-hash small { color: #7591a8; font-size: 9px; letter-spacing: .1em; }

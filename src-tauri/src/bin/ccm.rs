@@ -4,7 +4,11 @@
 //! and `install` delegate to the same backend paths as the Tauri commands;
 //! `summary`/`inspect` inventory only an explicitly supplied directory.
 
-use ccm_reborn_lib::{atomic_replace, cli_fixture_summary_json, cli_install_json, cli_installed_manifest_json, cli_plan_json, cli_restore_json};
+use ccm_reborn_lib::{
+    atomic_replace, cli_fixture_summary_json, cli_install_json, cli_installed_manifest_json,
+    cli_local_add_json, cli_local_inspect_json, cli_local_list_json, cli_local_remove_json,
+    cli_plan_json, cli_restore_json,
+};
 use ccm_reborn_lib::profile_core::{
     compare_snapshot, sort_progress_summaries, CampaignProgressSummary, FileDigest, ProfileIdentity,
     read_manifest,
@@ -31,6 +35,10 @@ USAGE:
   ccm profile-key --family ID --major N --campaign-id ID
   ccm sort-summary --input FILE [--output PATH]
   ccm roundtrip-check --root PATH --manifest FILE [--output PATH]
+  ccm local-inspect --archive PATH [--output PATH]
+  ccm local-add --archive PATH [--store-dir PATH] [--title T] [--author A] [--version V] [--output PATH]
+  ccm local-list [--store-dir PATH] [--output PATH]
+  ccm local-remove --id ID [--store-dir PATH] [--output PATH]
   ccm --help
 
 COMMANDS:
@@ -163,6 +171,28 @@ fn run_arguments(mut arguments: Vec<String>) -> Result<(), String> {
             let equal = report.equal;
             emit_json(serde_json::to_value(report).map_err(|error| error.to_string())?, options.get("output"))?;
             if equal { Ok(()) } else { Err("round-trip check failed".into()) }
+        }
+        "local-inspect" => {
+            let value = cli_local_inspect_json(required(&options, "archive")?)?;
+            emit_json(value, options.get("output"))
+        }
+        "local-add" => {
+            let value = cli_local_add_json(
+                options.get("store-dir").cloned(),
+                required(&options, "archive")?,
+                options.get("title").cloned(),
+                options.get("author").cloned(),
+                options.get("version").cloned(),
+            )?;
+            emit_json(value, options.get("output"))
+        }
+        "local-list" => {
+            let value = cli_local_list_json(options.get("store-dir").cloned())?;
+            emit_json(value, options.get("output"))
+        }
+        "local-remove" => {
+            let value = cli_local_remove_json(options.get("store-dir").cloned(), required(&options, "id")?)?;
+            emit_json(value, options.get("output"))
         }
         "--version" | "-V" => {
             println!("ccm-reborn {}", env!("CARGO_PKG_VERSION"));

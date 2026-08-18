@@ -119,6 +119,13 @@ export function sortCampaignsByRecentPlay(campaigns: Campaign[], resumes: SavedC
       if (rightPlayed === null) return -1;
       if (leftPlayed !== rightPlayed) return rightPlayed - leftPlayed;
     }
+    // A mod the player added themselves is a deliberate choice, so it belongs
+    // above the alphabetical cloud list rather than buried inside it. Without
+    // this a freshly added mod lands wherever its title happens to fall.
+    if (Boolean(left.isLocal) !== Boolean(right.isLocal)) return left.isLocal ? -1 : 1;
+    if (left.isLocal && right.isLocal && (left.addedAt ?? 0) !== (right.addedAt ?? 0)) {
+      return (right.addedAt ?? 0) - (left.addedAt ?? 0);
+    }
     return left.title.localeCompare(right.title, undefined, { sensitivity: "base" }) || left.id.localeCompare(right.id);
   });
 }

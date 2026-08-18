@@ -303,7 +303,7 @@ dependencies = [
 
 [[package]]
 name = "ccm-reborn"
-version = "0.1.3"
+version = "0.2.2"
 dependencies = [
  "fs2",
  "hex",

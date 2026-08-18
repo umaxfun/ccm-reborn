@@ -51,3 +51,15 @@ export async function copyInstallDiagnostics(failure: InstallFailure, logPath: s
 export function openInstallLogFolder() {
   return invoke("open_diagnostic_log_directory");
 }
+
+/// Copies the failure report and returns the status message to show, so the
+/// application shell does not have to know the wording of either outcome.
+export async function copyDiagnosticsMessage(failure: InstallFailure | null, logPath: string) {
+  if (!failure) return null;
+  try {
+    await copyInstallDiagnostics(failure, logPath);
+    return { text: "Diagnostics copied to the clipboard.", kind: "success" as const };
+  } catch {
+    return { text: "Could not copy diagnostics. The log path is shown below.", kind: "error" as const };
+  }
+}

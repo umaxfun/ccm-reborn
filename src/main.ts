@@ -12,9 +12,10 @@ import { isCurrentCatalogCampaign } from "./domain";
 import { resumeFor } from "./resume";
 import { migrateLegacyProfile, renderLegacyMigration } from "./legacy-migration";
 import { renderDashboard } from "./render-dashboard";
-import { copyInstallDiagnostics, InstallFailure, openInstallLogFolder, renderInstallStatus } from "./install-status";
+import { copyDiagnosticsMessage, InstallFailure, openInstallLogFolder, renderInstallStatus } from "./install-status";
 import { applyCampaignInstall, planCampaignInstall } from "./install-flow";
 import { renderSettingsDialog } from "./render-settings-dialog";
+import { bindLocalModEvents, localModDialog, localModsHeaderButton, mergeCatalog, refreshLocalMods } from "./local-mods";
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (!app) throw new Error("Application root is missing.");
@@ -28,6 +29,8 @@ let gameDir = localStorage.getItem("ccm-game-directory") ?? "";
 let profileDir = localStorage.getItem("ccm-profile-directory") ?? "";
 let profileCandidates: StarcraftProfileCandidate[] = [];
 let catalog: Catalog | null = null;
+let cloudCatalog: Catalog | null = null;
+let highlightCampaignId = "";
 let inspection: Inspection | null = null;
 let savedResumes: SavedCampaignResume[] = [];
 let page: "dashboard" | "library" = "dashboard";
@@ -77,12 +80,12 @@ function render() {
       <header>
         <div><h1>${page === "dashboard" ? "Campaigns" : "Library"}</h1></div>
         <div class="header-actions">
-          <button class="ghost compact" data-action="refresh-catalog" ${busy || !catalogSource ? "disabled" : ""}>Check for updates</button><button class="settings-button" data-action="show-settings">Sources</button>
+          <button class="ghost compact" data-action="refresh-catalog" ${busy || !catalogSource ? "disabled" : ""}>Check for updates</button>${localModsHeaderButton(busy)}<button class="settings-button" data-action="show-settings">Sources</button>
         </div>
       </header>
       ${renderInstallStatus({ message, messageKind, activity: installActivity, failure: lastInstallFailure, logPath: diagnosticLogPath })}
       ${renderLegacyMigration(catalog, savedResumes, profileDir, busy)}
-      ${page === "dashboard" ? renderDashboard({ catalog, inspection, savedResumes, busy, gameDir, profileDir, installingCampaignId: activeInstallCampaignId, isCurrentCatalogCampaign: (campaign) => isCurrentCatalogCampaign(campaign, inspection) }) : renderLibrary({ catalog, inspection, selectedId, busy, gameDir, installingCampaignId: activeInstallCampaignId, isCurrentCatalogCampaign: (campaign) => isCurrentCatalogCampaign(campaign, inspection) })}
+      ${page === "dashboard" ? renderDashboard({ catalog, inspection, savedResumes, busy, gameDir, profileDir, installingCampaignId: activeInstallCampaignId, highlightCampaignId, isCurrentCatalogCampaign: (campaign) => isCurrentCatalogCampaign(campaign, inspection) }) : renderLibrary({ catalog, inspection, selectedId, busy, gameDir, installingCampaignId: activeInstallCampaignId, isCurrentCatalogCampaign: (campaign) => isCurrentCatalogCampaign(campaign, inspection) })}
     </main>
     ${renderSettingsDialog({
       catalogSourceDraft: settingsCatalogSourceDraft,
@@ -92,8 +95,11 @@ function render() {
       showLocalDevCatalog: import.meta.env.DEV,
     })}
     ${pendingPlan ? renderPlanDialog(pendingPlan, profileDir, busy) : ""}
+    ${localModDialog()}
   `;
   bindEvents();
+  const addLocalDialog = document.querySelector<HTMLDialogElement>("#add-local-mod-dialog");
+  if (addLocalDialog && !addLocalDialog.open) addLocalDialog.showModal();
   const settingsDialog = document.querySelector<HTMLDialogElement>("#settings-dialog");
   if (settingsOpen && settingsDialog && !settingsDialog.open) settingsDialog.showModal();
   const planDialog = document.querySelector<HTMLDialogElement>("#plan-dialog");
@@ -181,6 +187,11 @@ function bindEvents() {
   });
   document.querySelector<HTMLButtonElement>("[data-action='copy-diagnostics']")?.addEventListener("click", () => void copyDiagnostics());
   document.querySelector<HTMLButtonElement>("[data-action='open-log-folder']")?.addEventListener("click", () => void openDiagnosticLogFolder());
+  bindLocalModEvents(
+    localModsContext,
+    catalog?.campaigns ?? [],
+    inspection?.managedCampaigns.map((campaign) => campaign.id) ?? [],
+  );
 }
 
 function showSettings() {
@@ -192,26 +203,20 @@ function showSettings() {
 }
 
 async function copyDiagnostics() {
-  if (!lastInstallFailure) return;
-  try {
-    await copyInstallDiagnostics(lastInstallFailure, diagnosticLogPath);
-    message = "Diagnostics copied to the clipboard.";
-    messageKind = "success";
-  } catch {
-    message = "Could not copy diagnostics. The log path is shown below.";
-    messageKind = "error";
+  const result = await copyDiagnosticsMessage(lastInstallFailure, diagnosticLogPath);
+  if (result) {
+    message = result.text;
+    messageKind = result.kind;
   }
   render();
 }
 
 async function openDiagnosticLogFolder() {
-  try {
-    await openInstallLogFolder();
-  } catch (error) {
+  await openInstallLogFolder().catch((error) => {
     message = String(error);
     messageKind = "error";
     render();
-  }
+  });
 }
 
 function useCatalogSource(source: string) {
@@ -321,6 +326,7 @@ async function detectGameDirectory() {
 
 async function loadCatalog() {
   if (!catalogSource) {
+    catalog = mergeCatalog(null, await refreshLocalMods());
     message = "Set a catalog source in Sources.";
     messageKind = "error";
     render();
@@ -331,15 +337,19 @@ async function loadCatalog() {
   messageKind = "neutral";
   render();
   try {
-    catalog = await invoke<Catalog>("load_catalog", { source: catalogSource });
-    selectedId ||= catalog.campaigns[0]?.id ?? "";
-    message = catalog.sourceKind === "cached"
+    cloudCatalog = await invoke<Catalog>("load_catalog", { source: catalogSource });
+    catalog = mergeCatalog(cloudCatalog, await refreshLocalMods());
+    selectedId ||= catalog?.campaigns[0]?.id ?? "";
+    message = cloudCatalog.sourceKind === "cached"
       ? "Offline — showing the last available campaign list."
       : "";
-    messageKind = catalog.sourceKind === "cached" ? "neutral" : "success";
+    messageKind = cloudCatalog.sourceKind === "cached" ? "neutral" : "success";
     await inspectDirectory();
   } catch (error) {
-    catalog = null;
+    cloudCatalog = null;
+    // Local mods are read from disk, so they stay playable when the cloud
+    // catalogue cannot be reached.
+    catalog = mergeCatalog(null, await refreshLocalMods());
     message = String(error);
     messageKind = "error";
   } finally {
@@ -347,6 +357,18 @@ async function loadCatalog() {
     render();
   }
 }
+
+const localModsContext = {
+  busy: () => busy,
+  setBusy: (value: boolean) => { busy = value; },
+  setMessage: (value: string, kind: "neutral" | "success" | "error") => { message = value; messageKind = kind; },
+  setHighlight: (campaignId: string) => { highlightCampaignId = campaignId; },
+  reload: async () => {
+    catalog = mergeCatalog(cloudCatalog, await refreshLocalMods());
+    await inspectDirectory();
+  },
+  render,
+};
 
 async function inspectDirectory() {
   if (!gameDir) {

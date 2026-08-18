@@ -156,3 +156,163 @@ fn install_over_a_map_previously_backed_up_as_a_folder_but_now_a_file_does_not_c
     assert!(!wol.join("mission.SC2Map").exists(), "mod A's map was cleared before mod B");
     let _ = fs::remove_dir_all(sandbox);
 }
+
+// --- Local mods (CCM-7) ----------------------------------------------------
+
+fn write_local_fixture_archive(path: &Path, folder: &str, metadata: &str) {
+    let mut archive = ZipWriter::new(File::create(path).unwrap());
+    let options = SimpleFileOptions::default();
+    archive.start_file(format!("{folder}/metadata.txt"), options).unwrap();
+    archive.write_all(metadata.as_bytes()).unwrap();
+    archive.start_file(format!("{folder}/zlab01.SC2Map"), options).unwrap();
+    archive.write_all(b"local-mod-map").unwrap();
+    archive.finish().unwrap();
+}
+
+#[test]
+fn local_package_inspection_reads_metadata_and_refuses_broken_archives() {
+    let sandbox = std::env::temp_dir().join(format!("ccm-local-inspect-{}", Uuid::new_v4()));
+    fs::create_dir_all(&sandbox).unwrap();
+
+    let good = sandbox.join("My HotS Mod.zip");
+    write_local_fixture_archive(&good, "My HotS Mod", "title=My HotS Mod\nauthor=Kit\ncampaign=HotS\nversion=1.0.2\ndesc=Short text\n");
+    let inspection = inspect_local_package_file(&good).unwrap();
+    assert_eq!(inspection.title, "My HotS Mod");
+    assert_eq!(inspection.author, "Kit");
+    assert_eq!(inspection.version, "1.0.2");
+    assert_eq!(inspection.description, "Short text");
+    assert_eq!(inspection.campaign, "Heart of the Swarm");
+    assert_eq!(inspection.target_path, "Maps/Campaign/swarm");
+    // The count matches the install inventory, which copies metadata.txt too.
+    assert_eq!(inspection.files, 2);
+    assert_eq!(inspection.suggested_id, "local-my-hots-mod");
+
+    // No metadata.txt at all.
+    let empty = sandbox.join("empty.zip");
+    let mut archive = ZipWriter::new(File::create(&empty).unwrap());
+    archive.start_file("Mod/zlab01.SC2Map", SimpleFileOptions::default()).unwrap();
+    archive.write_all(b"no-metadata").unwrap();
+    archive.finish().unwrap();
+    assert!(inspect_local_package_file(&empty).is_err());
+
+    // Two metadata.txt files.
+    let doubled = sandbox.join("doubled.zip");
+    let mut archive = ZipWriter::new(File::create(&doubled).unwrap());
+    let options = SimpleFileOptions::default();
+    for folder in ["A", "B"] {
+        archive.start_file(format!("{folder}/metadata.txt"), options).unwrap();
+        archive.write_all(b"title=X\ncampaign=HotS\n").unwrap();
+    }
+    archive.finish().unwrap();
+    assert!(inspect_local_package_file(&doubled).is_err());
+
+    // A campaign value CCM cannot route.
+    let unknown = sandbox.join("unknown.zip");
+    write_local_fixture_archive(&unknown, "Unknown", "title=X\ncampaign=Brood War\n");
+    assert!(inspect_local_package_file(&unknown).is_err());
+
+    let _ = fs::remove_dir_all(sandbox);
+}
+
+#[test]
+fn local_mod_ids_stay_stable_across_removal_title_edits_and_non_latin_names() {
+    let sandbox = std::env::temp_dir().join(format!("ccm-local-id-{}", Uuid::new_v4()));
+    let store = sandbox.join("store");
+    fs::create_dir_all(&sandbox).unwrap();
+
+    let archive = sandbox.join("Yuri of the Swarm.zip");
+    write_local_fixture_archive(&archive, "Yuri", "title=Yuri\nauthor=Yuri\ncampaign=HotS\nversion=1.09\n");
+    let added = add_local_mod_at(&store, &archive, &LocalModOverrides::default()).unwrap();
+    assert_eq!(added.record.id, "local-yuri-of-the-swarm");
+    assert!(Path::new(&added.archive_path).is_file());
+
+    // A title override must not influence the id: progress is keyed by id.
+    let renamed = sandbox.join("renamed.zip");
+    write_local_fixture_archive(&renamed, "Yuri", "title=Yuri\ncampaign=HotS\n");
+    let overrides = LocalModOverrides { title: Some("Totally Different Name".into()), ..Default::default() };
+    let second = add_local_mod_at(&store, &renamed, &overrides).unwrap();
+    assert_eq!(second.record.id, "local-renamed");
+    assert_eq!(second.record.title, "Totally Different Name");
+
+    // Remove, then add the same file again: the id must come back unchanged so
+    // the player's play history stays attached.
+    assert!(remove_local_mod_at(&store, "local-yuri-of-the-swarm").unwrap());
+    assert!(!Path::new(&added.archive_path).exists());
+    assert!(!remove_local_mod_at(&store, "local-yuri-of-the-swarm").unwrap());
+    let again = add_local_mod_at(&store, &archive, &LocalModOverrides::default()).unwrap();
+    assert_eq!(again.record.id, "local-yuri-of-the-swarm");
+
+    // A non-Latin archive name still has to produce a valid campaign id.
+    let chinese = sandbox.join("喵头嘤の奇妙战役.zip");
+    write_local_fixture_archive(&chinese, "Eyeser", "title=Eyeser\ncampaign=LotV\n");
+    let translated = add_local_mod_at(&store, &chinese, &LocalModOverrides::default()).unwrap();
+    validate_campaign_id(&translated.record.id).unwrap();
+    assert!(translated.record.id.starts_with("local-"));
+    assert_eq!(translated.record.campaign, "Legacy of the Void");
+
+    // Two different files with the same name must not collide.
+    let nested = sandbox.join("nested");
+    fs::create_dir_all(&nested).unwrap();
+    let twin = nested.join("Yuri of the Swarm.zip");
+    write_local_fixture_archive(&twin, "Twin", "title=Twin\ncampaign=HotS\n");
+    let twin_entry = add_local_mod_at(&store, &twin, &LocalModOverrides::default()).unwrap();
+    assert_eq!(twin_entry.record.id, "local-yuri-of-the-swarm-2");
+
+    let ids = list_local_mods_at(&store).into_iter().map(|entry| entry.record.id).collect::<Vec<_>>();
+    assert_eq!(ids.len(), 4);
+
+    let _ = fs::remove_dir_all(sandbox);
+}
+
+#[test]
+fn a_damaged_local_mod_list_is_survivable_for_reads_and_refused_for_writes() {
+    let sandbox = std::env::temp_dir().join(format!("ccm-local-damaged-{}", Uuid::new_v4()));
+    let store = sandbox.join("store");
+    fs::create_dir_all(&store).unwrap();
+    let archive = sandbox.join("mod.zip");
+    write_local_fixture_archive(&archive, "Mod", "title=Mod\ncampaign=WoL\n");
+    fs::write(store.join("local-mods.json"), b"{ not json").unwrap();
+
+    // Listing degrades to empty instead of preventing the app from starting.
+    assert!(list_local_mods_at(&store).is_empty());
+    // Writing refuses, so an unparsable list is never silently overwritten.
+    assert!(add_local_mod_at(&store, &archive, &LocalModOverrides::default()).is_err());
+    assert!(remove_local_mod_at(&store, "local-mod").is_err());
+    assert!(!local_mod_archive_directory(&store).join("local-mod.zip").exists());
+
+    let _ = fs::remove_dir_all(sandbox);
+}
+
+#[test]
+fn a_locally_added_mod_installs_from_ccms_own_copy() {
+    let sandbox = std::env::temp_dir().join(format!("ccm-local-install-{}", Uuid::new_v4()));
+    let store = sandbox.join("store");
+    let game_dir = sandbox.join("game");
+    fs::create_dir_all(game_dir.join("Maps/Campaign/swarm")).unwrap();
+    fs::write(game_dir.join("Maps/Campaign/swarm/zlab01.SC2Map"), b"vanilla").unwrap();
+    let archive = sandbox.join("Local HotS.zip");
+    write_local_fixture_archive(&archive, "Local HotS", "title=Local HotS\nauthor=Kit\ncampaign=HotS\nversion=2.0\n");
+
+    let entry = add_local_mod_at(&store, &archive, &LocalModOverrides::default()).unwrap();
+    // The player's own file is no longer needed once CCM holds a copy.
+    fs::remove_file(&archive).unwrap();
+
+    install_campaign_blocking(InstallRequest {
+        campaign_id: entry.record.id.clone(),
+        title: entry.record.title.clone(),
+        author: entry.record.author.clone(),
+        version: entry.record.version.clone(),
+        profile_dir: None,
+        archive_source: entry.archive_path.clone(),
+        sha256: entry.record.sha256.clone(),
+        package_size: Some(entry.record.size),
+        game_dir: game_dir.display().to_string(),
+    })
+    .unwrap();
+    assert_eq!(
+        fs::read(game_dir.join("Maps/Campaign/swarm/zlab01.SC2Map")).unwrap(),
+        b"local-mod-map"
+    );
+
+    let _ = fs::remove_dir_all(sandbox);
+}
