@@ -154,7 +154,30 @@ fn copy_file(from: &Path, to: &Path) -> Result<(), String> {
     let mut source = File::open(from).map_err(io_error)?;
     let mut target = File::create(to).map_err(io_error)?;
     io::copy(&mut source, &mut target).map_err(io_error)?;
-    target.sync_all().map_err(io_error)
+    // No per-file fsync: crash-safety comes from the fsynced pending-install
+    // journal + recovery, not from flushing every game file synchronously.
+    Ok(())
+}
+
+/// Stream `reader` into `to` in one pass, returning `(bytes_written, sha256)`; no per-file fsync (see `copy_file`).
+fn write_reader_hashed(mut reader: impl Read, to: &Path) -> Result<(u64, String), String> {
+    if let Some(parent) = to.parent() {
+        fs::create_dir_all(parent).map_err(io_error)?;
+    }
+    let mut target = File::create(to).map_err(io_error)?;
+    let mut hasher = Sha256::new();
+    let mut buffer = [0_u8; 64 * 1024];
+    let mut total = 0_u64;
+    loop {
+        let read = reader.read(&mut buffer).map_err(io_error)?;
+        if read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..read]);
+        target.write_all(&buffer[..read]).map_err(io_error)?;
+        total = total.saturating_add(read as u64);
+    }
+    Ok((total, hex::encode(hasher.finalize())))
 }
 
 
@@ -191,6 +214,13 @@ fn safe_game_path(root: &Path, relative: &Path) -> Result<PathBuf, String> {
                 return Err(format!("Refusing to use symlinked game path {}.", current.display()));
             }
             Ok(metadata) if current != root.join(&relative) && !metadata.is_dir() => {
+                // A `.SC2Map`/`.SC2Mod` may ship as an unpacked dir or a single
+                // file; a recorded path can sit inside one that is now a plain
+                // file. The caller replaces that map unit wholesale (and a plain
+                // file can't hide a symlink), so resolve and stop descending.
+                if is_wol_owned_asset_directory(name) {
+                    return Ok(root.join(&relative));
+                }
                 return Err(format!("Game path ancestor {} is not a directory.", current.display()));
             }
             Ok(_) => {}

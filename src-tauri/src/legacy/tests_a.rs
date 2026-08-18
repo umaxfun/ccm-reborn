@@ -468,3 +468,4 @@
         assert!(!pending_install_path(&game_dir).exists());
         let _ = fs::remove_dir_all(sandbox);
     }
+
