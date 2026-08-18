@@ -154,17 +154,12 @@ fn copy_file(from: &Path, to: &Path) -> Result<(), String> {
     let mut source = File::open(from).map_err(io_error)?;
     let mut target = File::create(to).map_err(io_error)?;
     io::copy(&mut source, &mut target).map_err(io_error)?;
-    // No per-file fsync: an install can copy hundreds of small campaign files
-    // across staging/backup/restore/replace, and a synchronous flush per file
-    // dominates the runtime. Crash-safety comes from the pending-install
-    // journal (fsynced) plus recovery, which re-derives the slot from staging
-    // and backups, not from each game file being individually durable.
+    // No per-file fsync: crash-safety comes from the fsynced pending-install
+    // journal + recovery, not from flushing every game file synchronously.
     Ok(())
 }
 
-/// Stream `reader` into `to`, returning `(bytes_written, sha256)`. Hashing
-/// while copying avoids a second full read of every extracted file, and, like
-/// `copy_file`, it does not fsync per file (see the note there).
+/// Stream `reader` into `to` in one pass, returning `(bytes_written, sha256)`; no per-file fsync (see `copy_file`).
 fn write_reader_hashed(mut reader: impl Read, to: &Path) -> Result<(u64, String), String> {
     if let Some(parent) = to.parent() {
         fs::create_dir_all(parent).map_err(io_error)?;
@@ -219,15 +214,10 @@ fn safe_game_path(root: &Path, relative: &Path) -> Result<PathBuf, String> {
                 return Err(format!("Refusing to use symlinked game path {}.", current.display()));
             }
             Ok(metadata) if current != root.join(&relative) && !metadata.is_dir() => {
-                // A community map named `*.SC2Map` / `*.SC2Mod` may be shipped
-                // either as an unpacked directory or as a single archive file.
-                // A recorded path can therefore point *inside* an entry that
-                // currently exists on disk as a plain file (a differently-packed
-                // map of the same name). That is not a path escape: the caller
-                // owns this map unit and clears/replaces it wholesale before
-                // writing. A regular file has no children, so no symlink can
-                // hide beneath it and every ancestor above was already checked
-                // above -- resolve to the intended path and stop descending.
+                // A `.SC2Map`/`.SC2Mod` may ship as an unpacked dir or a single
+                // file; a recorded path can sit inside one that is now a plain
+                // file. The caller replaces that map unit wholesale (and a plain
+                // file can't hide a symlink), so resolve and stop descending.
                 if is_wol_owned_asset_directory(name) {
                     return Ok(root.join(&relative));
                 }
