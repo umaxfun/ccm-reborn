@@ -1,7 +1,7 @@
 {
   "name": "ccm-reborn",
   "private": true,
-  "version": "0.2.2",
+  "version": "0.3.0",
   "type": "module",
   "scripts": {
     "check:source-size": "node scripts/check-source-size.mjs",
@@ -23,6 +23,8 @@
     "cms:medallion:schema": "node --env-file=.env scripts/hygraph/002-medallion-content-schema.mjs",
     "cms:medallion:source-context-schema": "node --env-file=.env scripts/hygraph/003-medallion-source-context-schema.mjs",
     "cms:medallion:difficulty-schema": "node --env-file=.env scripts/hygraph/004-silver-difficulty-schema.mjs",
+    "cms:medallion:mirror-schema": "node --env-file=.env scripts/hygraph/005-silver-mirror-package-schema.mjs",
+    "cms:medallion:download-url-schema": "node --env-file=.env scripts/hygraph/006-silver-download-url-meaning.mjs",
     "cms:bronze:import-rpc": "node --env-file=.env scripts/hygraph/import-discord-rpc-observations.mjs",
     "cms:bronze:import-browser": "node --env-file=.env scripts/hygraph/import-browser-bronze-observations.mjs",
     "cms:silver:from-bronze": "node --env-file=.env scripts/hygraph/promote-bronze-forum-to-silver.mjs",

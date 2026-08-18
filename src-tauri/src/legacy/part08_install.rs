@@ -228,6 +228,9 @@ struct CcmPackage {
     content_prefix: String,
     target_path: String,
     metadata_text: String,
+    // True for the "special" whole-game-root archive layout: top-level Maps/
+    // and Mods/ folders with metadata.txt living inside the campaign slot.
+    install_root: bool,
 }
 struct PackageFilePlan {
     source: String,
@@ -283,19 +286,18 @@ fn inspect_ccm_package_files(
     let mut planned = Vec::new();
     for index in 0..archive.len() {
         let source = archive.by_index(index).map_err(zip_error)?;
+        if source.is_dir() {
+            continue;
+        }
         let source_name = source.name().to_string();
-        if !source_name.starts_with(&package.content_prefix) || source.is_dir() {
+        let Some(relative) = package_member_relative(&package, &source_name) else {
             continue;
-        }
-        let relative = &source_name[package.content_prefix.len()..];
-        if relative.is_empty() {
-            continue;
-        }
+        };
         if source.size() > MAX_FILE_BYTES {
             return Err(format!("Package file {source_name} is too large."));
         }
         let relative = safe_relative_path(relative)?;
-        let destination = package_destination(&package.target_path, &relative)?;
+        let destination = package_destination(&package, &relative)?;
         planned.push(PackageFilePlan {
             source: source_name,
             destination: path_string(&destination),
@@ -353,7 +355,7 @@ fn read_ccm_package(archive_path: &Path) -> Result<CcmPackage, String> {
         if name.contains('\\') {
             return Err("CCM packages must use forward slashes in ZIP paths.".into());
         }
-        if name == "metadata.txt" || name.ends_with("/metadata.txt") {
+        if is_metadata_file(name) {
             metadata_indexes.push(index);
         }
     }
@@ -369,14 +371,12 @@ fn read_ccm_package(archive_path: &Path) -> Result<CcmPackage, String> {
     metadata.read_to_end(&mut metadata_bytes).map_err(io_error)?;
     let metadata_text = decode_ccm_metadata(&metadata_bytes)?;
     let target_path = campaign_target_from_metadata(&metadata_text)?;
-    let content_prefix = metadata_name
-        .strip_suffix("metadata.txt")
-        .ok_or("metadata.txt path is invalid.")?
-        .to_string();
+    let (content_prefix, install_root) = resolve_package_layout(&metadata_name, &target_path)?;
     Ok(CcmPackage {
         content_prefix,
         target_path,
         metadata_text,
+        install_root,
     })
 }
 
@@ -393,14 +393,13 @@ fn extract_ccm_package(
 
     for index in 0..archive.len() {
         let mut source = archive.by_index(index).map_err(zip_error)?;
+        if source.is_dir() {
+            continue;
+        }
         let source_name = source.name().to_string();
-        if !source_name.starts_with(&package.content_prefix) {
+        let Some(relative) = package_member_relative(&package, &source_name) else {
             continue;
-        }
-        let relative = &source_name[package.content_prefix.len()..];
-        if relative.is_empty() || source.is_dir() {
-            continue;
-        }
+        };
         if source.size() > MAX_FILE_BYTES {
             return Err(format!("Package file {source_name} is too large."));
         }
@@ -410,7 +409,7 @@ fn extract_ccm_package(
         }
 
         let relative = safe_relative_path(relative)?;
-        let destination = package_destination(&package.target_path, &relative)?;
+        let destination = package_destination(&package, &relative)?;
         let destination_string = path_string(&destination);
         let staged_path = staging.join(&destination);
         if let Some(parent) = staged_path.parent() {

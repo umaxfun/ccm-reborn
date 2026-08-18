@@ -108,18 +108,20 @@ fn ccm_package_matches_target(archive_path: &Path, package: &CcmPackage, root: &
         let Ok(mut source) = archive.by_index(index) else {
             return false;
         };
-        let source_name = source.name().to_string();
-        if !source_name.starts_with(&package.content_prefix) || source.is_dir() {
+        if source.is_dir() {
             continue;
         }
-        let relative = &source_name[package.content_prefix.len()..];
-        if relative.is_empty() || relative == "metadata.txt" {
+        let source_name = source.name().to_string();
+        let Some(relative) = package_member_relative(&package, &source_name) else {
+            continue;
+        };
+        if relative == "metadata.txt" {
             continue;
         }
         let Ok(relative) = safe_relative_path(relative) else {
             return false;
         };
-        let Ok(destination) = package_destination(&package.target_path, &relative) else {
+        let Ok(destination) = package_destination(&package, &relative) else {
             return false;
         };
         let target = root.join(destination);

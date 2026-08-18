@@ -316,3 +316,83 @@ fn a_locally_added_mod_installs_from_ccms_own_copy() {
 
     let _ = fs::remove_dir_all(sandbox);
 }
+
+#[test]
+fn special_whole_game_root_layout_installs_the_sibling_mods_dependency() {
+    // Some HotS mods are packaged the "copy Maps and Mods into StarCraft II"
+    // way: top-level Maps/ and Mods/ folders with metadata.txt living inside the
+    // campaign slot. The sibling Mods/ dependency tree must be installed, not
+    // dropped, and loose files beside the two folders must be ignored.
+    let sandbox = std::env::temp_dir().join(format!("ccm-install-root-{}", Uuid::new_v4()));
+    let game_dir = sandbox.join("game");
+    let archive_path = sandbox.join("leviathan-like.zip");
+    fs::create_dir_all(game_dir.join("Maps/Campaign/swarm/evolution")).unwrap();
+    fs::create_dir_all(game_dir.join("Mods")).unwrap();
+
+    let mut archive = ZipWriter::new(File::create(&archive_path).unwrap());
+    let options = SimpleFileOptions::default();
+    archive.start_file("Maps/Campaign/swarm/metadata.txt", options).unwrap();
+    archive.write_all(b"title=Install Root\nauthor=Test\ncampaign=HotS\nversion=1\n").unwrap();
+    for (path, bytes) in [
+        ("Maps/Campaign/swarm/zchar01.SC2Map", b"campaign-map" as &[u8]),
+        ("Maps/Campaign/swarm/Evolution/zevolutionzergling.SC2Map", b"evolution-map"),
+        ("Mods/MyDep.SC2Mod/DocumentInfo", b"dependency-file"),
+        ("Change Logs.txt", b"loose changelog beside the two folders"),
+    ] {
+        archive.start_file(path, options).unwrap();
+        archive.write_all(bytes).unwrap();
+    }
+    archive.finish().unwrap();
+
+    let request = InstallRequest {
+        campaign_id: "install-root-test".into(), title: "Install Root".into(), author: "Test".into(), version: "1".into(),
+        profile_dir: None, archive_source: archive_path.display().to_string(), sha256: sha256_file(&archive_path).unwrap(),
+        package_size: None, game_dir: game_dir.display().to_string(),
+    };
+    let plan = plan_campaign_install_blocking(request.clone()).unwrap();
+    assert!(plan.dependency_roots.iter().any(|root| root == "Mods/MyDep.SC2Mod"), "dependency root must be planned");
+
+    let result = install_archive(&game_dir, &request, &archive_path, &request.sha256, None).unwrap();
+    // metadata.txt + two maps + one dependency file; the loose changelog is skipped.
+    assert_eq!(result.files_installed, 4);
+    assert_eq!(fs::read(game_dir.join("Maps/Campaign/swarm/zchar01.SC2Map")).unwrap(), b"campaign-map");
+    assert_eq!(fs::read(game_dir.join("Maps/Campaign/swarm/Evolution/zevolutionzergling.SC2Map")).unwrap(), b"evolution-map");
+    assert_eq!(fs::read(game_dir.join("Mods/MyDep.SC2Mod/DocumentInfo")).unwrap(), b"dependency-file");
+    assert!(!game_dir.join("Change Logs.txt").exists(), "loose root files must not be installed");
+
+    let _ = fs::remove_dir_all(sandbox);
+}
+
+#[test]
+fn plan_warns_when_most_archive_files_are_outside_the_installed_layout() {
+    // A guard against silently installing only part of an archive: if the plan
+    // matches far fewer files than the archive holds, it must say so.
+    let sandbox = std::env::temp_dir().join(format!("ccm-coverage-warn-{}", Uuid::new_v4()));
+    let game_dir = sandbox.join("game");
+    let archive_path = sandbox.join("mostly-unmatched.zip");
+    fs::create_dir_all(game_dir.join("Maps/Campaign/swarm")).unwrap();
+    fs::create_dir_all(game_dir.join("Mods")).unwrap();
+
+    let mut archive = ZipWriter::new(File::create(&archive_path).unwrap());
+    let options = SimpleFileOptions::default();
+    archive.start_file("Mod/metadata.txt", options).unwrap();
+    archive.write_all(b"title=Mostly Unmatched\nauthor=Test\ncampaign=HotS\nversion=1\n").unwrap();
+    archive.start_file("Mod/zchar01.SC2Map", options).unwrap();
+    archive.write_all(b"the-one-map").unwrap();
+    // 60 files that sit outside the content root, so the plan cannot place them.
+    for i in 0..60 {
+        archive.start_file(format!("Extras/file_{i:03}.bin"), options).unwrap();
+        archive.write_all(b"x").unwrap();
+    }
+    archive.finish().unwrap();
+
+    let request = InstallRequest {
+        campaign_id: "coverage-warn".into(), title: "Mostly Unmatched".into(), author: "Test".into(), version: "1".into(),
+        profile_dir: None, archive_source: archive_path.display().to_string(), sha256: sha256_file(&archive_path).unwrap(),
+        package_size: None, game_dir: game_dir.display().to_string(),
+    };
+    let plan = plan_campaign_install_blocking(request).unwrap();
+    assert!(plan.warnings.iter().any(|w| w.contains("were skipped")), "expected a coverage warning, got {:?}", plan.warnings);
+
+    let _ = fs::remove_dir_all(sandbox);
+}

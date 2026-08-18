@@ -21,7 +21,7 @@ use profile_core::{
 };
 
 const MANAGER_DIRECTORY: &str = ".ccm-reborn";
-const MAX_ARCHIVE_BYTES: u64 = 2 * 1024 * 1024 * 1024;
+const MAX_ARCHIVE_BYTES: u64 = 8 * 1024 * 1024 * 1024;
 const MAX_FILE_BYTES: u64 = 512 * 1024 * 1024;
 const MAX_METADATA_BYTES: u64 = 64 * 1024;
 const MAX_ARCHIVE_ENTRIES: usize = 100_000;

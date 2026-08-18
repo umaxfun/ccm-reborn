@@ -237,6 +237,19 @@ fn plan_campaign_install_with_progress(
     if !dependency_roots.is_empty() {
         warnings.push("Package dependencies will be placed under the game Mods directory.".into());
     }
+    // Alert when the plan covers far fewer files than the archive holds: a sign
+    // its folder layout is only partly understood (as happened before the
+    // whole-game-root layout was supported and every Mods/ file was dropped).
+    let archive_entries = archive_content_entry_count(&archive_path)?;
+    let skipped_entries = archive_entries.saturating_sub(package_files.len());
+    if skipped_entries >= 50 && skipped_entries.saturating_mul(5) >= archive_entries {
+        warnings.push(format!(
+            "Only {} of {} files in the archive match a campaign or Mods/ layout CCM installs — {} were skipped. If more should install, this package's folder layout may be unsupported.",
+            package_files.len(),
+            archive_entries,
+            skipped_entries,
+        ));
+    }
     let plan = DryRunPlan {
         operation_id,
         campaign_id: request.campaign_id,

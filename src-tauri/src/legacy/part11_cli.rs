@@ -157,11 +157,95 @@ fn safe_relative_path(value: &str) -> Result<PathBuf, String> {
     Ok(path.to_path_buf())
 }
 
-fn package_destination(target_path: &str, relative: &Path) -> Result<PathBuf, String> {
+/// Resolves where a package's installable content begins and whether the
+/// archive uses the special whole-game-root layout (top-level Maps/ and Mods/
+/// with metadata.txt living inside the campaign slot, e.g.
+/// `Maps/Campaign/swarm/metadata.txt`). For the classic layout the content
+/// prefix is simply the directory that holds metadata.txt.
+fn resolve_package_layout(metadata_name: &str, target_path: &str) -> Result<(String, bool), String> {
+    // The content root is the directory that holds metadata.txt, taken by path
+    // (last '/') rather than by trimming a fixed filename — mods authored on
+    // case-insensitive Windows spell it `Metadata.txt`, `METADATA.TXT`, etc.
+    let metadata_dir = match metadata_name.rfind('/') {
+        Some(index) => &metadata_name[..=index],
+        None => "",
+    };
+    // Case-insensitively, because real archives spell the slot both ways
+    // (e.g. `Maps/campaign/metadata.txt`) and StarCraft II's own filesystem is
+    // case-insensitive. ASCII-lowercasing preserves byte length, so the split
+    // point is the same in the original string.
+    let slot_suffix = format!("{target_path}/");
+    if metadata_dir
+        .to_ascii_lowercase()
+        .ends_with(&slot_suffix.to_ascii_lowercase())
+    {
+        let root = &metadata_dir[..metadata_dir.len() - slot_suffix.len()];
+        return Ok((root.to_string(), true));
+    }
+    Ok((metadata_dir.to_string(), false))
+}
+
+/// True when the ZIP member is a metadata.txt file, matched case-insensitively
+/// on the final path segment (Windows-authored archives vary the casing).
+fn is_metadata_file(name: &str) -> bool {
+    name.rsplit('/').next().unwrap_or(name).eq_ignore_ascii_case("metadata.txt")
+}
+
+/// Counts the archive's non-directory entries, so the plan can warn when it
+/// installs far fewer files than the archive actually holds — a signal that the
+/// archive's folder layout was only partially understood.
+fn archive_content_entry_count(archive_path: &Path) -> Result<usize, String> {
+    let file = File::open(archive_path).map_err(io_error)?;
+    let mut archive = ZipArchive::new(file).map_err(zip_error)?;
+    let mut count = 0usize;
+    for index in 0..archive.len() {
+        if !archive.by_index(index).map_err(zip_error)?.is_dir() {
+            count += 1;
+        }
+    }
+    Ok(count)
+}
+
+/// A member's path relative to the package content root, or None when the entry
+/// is not installable content: outside the content root, the empty root marker,
+/// or — for a whole-game-root archive — a loose file that is neither under
+/// Maps/ nor Mods/ (a changelog beside the two folders, say).
+fn package_member_relative<'a>(package: &CcmPackage, source_name: &'a str) -> Option<&'a str> {
+    let relative = source_name.strip_prefix(package.content_prefix.as_str())?;
+    if relative.is_empty() {
+        return None;
+    }
+    if package.install_root {
+        let first = relative.split('/').next().unwrap_or_default();
+        if !first.eq_ignore_ascii_case("Maps") && !first.eq_ignore_ascii_case("Mods") {
+            return None;
+        }
+    }
+    Some(relative)
+}
+
+fn package_destination(package: &CcmPackage, relative: &Path) -> Result<PathBuf, String> {
+    if package.install_root {
+        // The archive already stores each member at its final path under the
+        // StarCraft II folder, so campaign files (Maps/…) and the sibling
+        // dependency trees (Mods/…) are both kept verbatim rather than being
+        // re-based under the campaign slot. The one adjustment: canonicalise the
+        // campaign-slot prefix casing (an archive may spell it `Maps/campaign/`)
+        // so the downstream clear/restore bookkeeping, which matches the exact
+        // `Maps/Campaign/…` target, still recognises these as campaign files.
+        let relative_string = path_string(relative);
+        let slot = format!("{}/", package.target_path);
+        if relative_string.len() >= slot.len()
+            && relative_string[..slot.len()].eq_ignore_ascii_case(&slot)
+        {
+            return safe_relative_path(&format!("{slot}{}", &relative_string[slot.len()..]));
+        }
+        return Ok(relative.to_path_buf());
+    }
     if let Some(destination) = dependency_destination(relative) {
         return Ok(destination);
     }
-    let target = safe_campaign_target(target_path)?;
+    let target = safe_campaign_target(&package.target_path)?;
     // Blizzard exposes Whispers of Oblivion as a sibling virtual campaign,
     // rather than as a child of the main LotV campaign.  A CCM archive keeps
     // the conventional `voidprologue/...` layout, so route just that subtree
