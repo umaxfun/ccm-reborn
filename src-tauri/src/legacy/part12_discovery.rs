@@ -454,7 +454,11 @@ pub fn run() {
             detect_game_directories,
             detect_starcraft_profiles,
             get_diagnostic_log_path,
-            open_diagnostic_log_directory
+            open_diagnostic_log_directory,
+            inspect_local_package,
+            add_local_mod,
+            list_local_mods,
+            remove_local_mod
         ])
         .run(tauri::generate_context!())
         .expect("error while running CCM Reborn");

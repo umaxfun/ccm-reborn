@@ -141,8 +141,7 @@ fn install_archive(
             return Err(error);
         }
         // Kept for compatibility with installations created before the
-        // profile-aware journal.  `pending-install.json` is the authoritative
-        // recovery record for this operation.
+        // profile-aware journal. `pending-install.json` is authoritative here.
         if let Err(error) = write_json_atomic(&journal_path(root), &state) {
             let _ = fs::remove_dir_all(manager_root(root).join(&state.backup_dir));
             if rollback_before_new_state(root, previous_install.as_ref(), &profile_transaction).is_ok() {
@@ -228,6 +227,7 @@ struct StagedFile {
 struct CcmPackage {
     content_prefix: String,
     target_path: String,
+    metadata_text: String,
 }
 struct PackageFilePlan {
     source: String,
@@ -376,6 +376,7 @@ fn read_ccm_package(archive_path: &Path) -> Result<CcmPackage, String> {
     Ok(CcmPackage {
         content_prefix,
         target_path,
+        metadata_text,
     })
 }
 

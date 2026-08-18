@@ -21,6 +21,7 @@ type DashboardContext = {
   gameDir: string;
   profileDir: string;
   installingCampaignId: string;
+  highlightCampaignId: string;
   isCurrentCatalogCampaign: (campaign: Campaign) => boolean;
 };
 
@@ -58,15 +59,15 @@ function renderSlot(slot: typeof slots[number], context: DashboardContext) {
         ${options.length ? options.map((campaign) => {
           const isCurrent = context.isCurrentCatalogCampaign(campaign);
           return `
-          <article class="install-option">
+          <article class="install-option${campaign.isLocal ? " local" : ""}${campaign.id === context.highlightCampaignId ? " highlighted" : ""}">
             <div class="option-cover cover-${coverClass(campaign.id)}">${escapeHtml(campaign.title.slice(0, 1).toUpperCase())}</div>
-            <div class="option-copy"><strong>${escapeHtml(campaign.title)}</strong><span>by ${escapeHtml(campaign.author)} · v${escapeHtml(campaign.version)} · ${formatBytes(campaign.package.size)}</span><span class="option-progress">${escapeHtml(resumeSummary(resumeFor(context.savedResumes, campaign.id)))}</span></div>
+            <div class="option-copy"><strong><span class="option-title">${escapeHtml(campaign.title)}</span>${campaign.isLocal ? '<span class="local-pill">LOCAL</span>' : ""}</strong><span>by ${escapeHtml(campaign.author)} · v${escapeHtml(campaign.version)} · ${formatBytes(campaign.package.size)}</span><span class="option-progress">${escapeHtml(resumeSummary(resumeFor(context.savedResumes, campaign.id)))}</span>${campaign.isLocal ? `<span class="option-remove"><button type="button" class="link-action" data-action="remove-local-mod" data-campaign="${escapeHtml(campaign.id)}" ${context.busy ? "disabled" : ""}>Remove from list</button></span>` : ""}</div>
             ${isCurrent
               ? `<button class="primary compact open-battle-net" data-action="open-battle-net" ${context.busy ? "disabled" : ""}>Open Battle.net</button>`
               : `<button class="primary compact" data-action="install" data-campaign="${escapeHtml(campaign.id)}" ${!context.gameDir || context.busy ? "disabled" : ""}>${context.busy && context.installingCampaignId === campaign.id ? "Working…" : "Install"}</button>`}
           </article>
         `;
-        }).join("") : '<p class="no-options">No packages for this campaign in the current catalog.</p>'}
+        }).join("") : '<p class="no-options">No packages for this campaign yet — check for updates or add a mod from your computer.</p>'}
       </section>
     </article>`;
 }

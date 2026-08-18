@@ -16,6 +16,7 @@ include!("legacy/part11_cli.rs");
 include!("legacy/part15_campaign_routes.rs");
 include!("legacy/part12_discovery.rs");
 include!("legacy/part13_legacy_migration.rs");
+include!("legacy/part17_local_mods.rs");
 
 #[cfg(test)]
 mod tests_a {

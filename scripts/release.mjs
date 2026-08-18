@@ -1,10 +1,12 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const targetDirectory = resolve(root, "src-tauri", "target");
+const appBundleName = "CCM Reborn";
 const tauriCli = resolve(root, "node_modules", "@tauri-apps", "cli", "tauri.js");
 const windowsTarget = "x86_64-pc-windows-msvc";
 const macTargets = ["aarch64-apple-darwin", "x86_64-apple-darwin"];
@@ -63,11 +65,42 @@ function ensureMacWindowsPrerequisites() {
   return { llvmPackage };
 }
 
+/// Tauri ad-hoc signs the main binary but leaves the app bundle unsealed, and
+/// both CCM's extra `ccm` CLI binary and the universal `lipo` merge invalidate
+/// that signature. macOS refuses to launch an app with a broken signature on
+/// Apple Silicon ("the application can't be opened"), so seal the finished
+/// bundle ad-hoc and rebuild the disk image from the signed copy.
+function sealMacBundle(bundleDirectory) {
+  const app = resolve(bundleDirectory, "macos", `${appBundleName}.app`);
+  if (!existsSync(app)) fail(`macOS app bundle is missing at ${app}`);
+  run("codesign", ["--force", "--deep", "--sign", "-", app]);
+  run("codesign", ["--verify", "--strict", app]);
+
+  const dmgDirectory = resolve(bundleDirectory, "dmg");
+  const dmg = existsSync(dmgDirectory)
+    ? readdirSync(dmgDirectory).find((name) => name.endsWith(".dmg"))
+    : undefined;
+  if (!dmg) return;
+
+  const staging = mkdtempSync(resolve(tmpdir(), "ccm-dmg-"));
+  try {
+    run("cp", ["-R", app, resolve(staging, `${appBundleName}.app`)]);
+    run("ln", ["-s", "/Applications", resolve(staging, "Applications")]);
+    run("hdiutil", [
+      "create", "-volname", appBundleName, "-srcfolder", staging,
+      "-ov", "-format", "UDZO", resolve(dmgDirectory, dmg),
+    ]);
+  } finally {
+    rmSync(staging, { recursive: true, force: true });
+  }
+}
+
 function buildMac() {
   if (platform !== "darwin") {
     fail("macOS bundles must be built on macOS. Run this command on a Mac or use a macOS CI runner.");
   }
   tauri(["--bundles", "app,dmg"]);
+  sealMacBundle(resolve(targetDirectory, "release", "bundle"));
 }
 
 function buildUniversalMac() {
@@ -97,6 +130,7 @@ function buildUniversalMac() {
   ]);
 
   tauri(["--target", universalMacTarget, "--bundles", "app,dmg"]);
+  sealMacBundle(resolve(targetDirectory, universalMacTarget, "release", "bundle"));
 }
 
 function buildWindows() {

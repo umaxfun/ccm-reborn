@@ -1,6 +1,6 @@
 [package]
 name = "ccm-reborn"
-version = "0.1.3"
+version = "0.2.2"
 description = "A safe, cross-platform custom campaign manager for StarCraft II"
 authors = ["CCM Reborn contributors"]
 edition = "2021"
